@@ -1,16 +1,19 @@
-## Hi there 👋
+### Hi there, I'm Sanjana Anbazhagan 👋
 
-<!--
-**SANJANA-ANBAZHAGAN/SANJANA-ANBAZHAGAN** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+## About Me
+- 🎓 I'm a Cybersecurity Graduate from the University of Maryland.
+- 👀 I’m interested in all things Security.
+- 📫 How to reach me: sanjuanbu@gmail.com.
 
-Here are some ideas to get you started:
+## Languages and Tools:
+- ![Python](https://img.shields.io/badge/-Python-000?&logo=Python)
+- ![C](https://img.shields.io/badge/-C-000?&logo=C)
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## Certifications
+- CompTIA Security+
+- ISC2 Certified in Cybersecurity
+- AWS Solution Architect (Ongoing)
+  
+## Find me elsewhere 🌎
+- [LinkedIn](www.linkedin.com/in/sanjanaanbazhagan)
+- [Medium](https://medium.com/@sanjana_anbazhagan)
