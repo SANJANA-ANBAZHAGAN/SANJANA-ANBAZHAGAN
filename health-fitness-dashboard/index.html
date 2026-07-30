@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sanjana's Health &amp; Fitness Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header__title">
+      <span class="app-header__logo">🏋️‍♀️</span>
+      <div>
+        <h1>Health &amp; Fitness Dashboard</h1>
+        <p id="header-date" class="app-header__subtitle"></p>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="overview">Daily Overview</button>
+      <button class="tab-btn" data-tab="nutrition">Nutrition</button>
+      <button class="tab-btn" data-tab="workouts">Workouts</button>
+      <button class="tab-btn" data-tab="running">Running</button>
+      <button class="tab-btn" data-tab="goals">Body Goals</button>
+      <button class="tab-btn" data-tab="plans">Plans</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <main id="app">
+    <section id="tab-overview" class="tab-panel active"></section>
+    <section id="tab-nutrition" class="tab-panel"></section>
+    <section id="tab-workouts" class="tab-panel"></section>
+    <section id="tab-running" class="tab-panel"></section>
+    <section id="tab-goals" class="tab-panel"></section>
+    <section id="tab-plans" class="tab-panel"></section>
+    <section id="tab-settings" class="tab-panel"></section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/vendor/chart.umd.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/plans.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/appleHealthImport.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
