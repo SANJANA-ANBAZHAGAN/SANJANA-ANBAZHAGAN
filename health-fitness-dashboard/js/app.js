@@ -27,6 +27,9 @@
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
+  function sourceLabel(source) {
+    return { apple_health: "Apple Health", strava: "Strava", manual: "Manual" }[source] || "Manual";
+  }
   function paceStr(p) {
     if (!p || !isFinite(p)) return "—";
     const m = Math.floor(p);
@@ -77,7 +80,7 @@
   function dateNavHTML(date) {
     return `<div class="flex-between mb">
       <button class="btn secondary small" data-nav="-1">← Prev day</button>
-      <input type="date" id="date-picker" value="${date}" />
+      <input type="date" class="js-date-picker" value="${date}" />
       <button class="btn secondary small" data-nav="1">Next day →</button>
     </div>`;
   }
@@ -90,7 +93,7 @@
       AppState.selectedDate = addDaysStr(AppState.selectedDate, 1);
       rerender();
     });
-    panel.querySelector("#date-picker").addEventListener("change", (e) => {
+    panel.querySelector(".js-date-picker").addEventListener("change", (e) => {
       AppState.selectedDate = e.target.value;
       rerender();
     });
@@ -187,7 +190,13 @@
         ${metricCard("Protein", totals.protein, "g", `Target ${T.proteinMinG}-${T.proteinMaxG}g (flag below ${T.proteinFlagG}g)`, proStatus, (totals.protein / T.proteinMaxG) * 100)}
         ${metricCard("Fiber", totals.fiber, "g", `Target ${T.fiberMinG}-${T.fiberMaxG}g`, fiberStatus, (totals.fiber / T.fiberMaxG) * 100)}
       </div>
-      ${appleNut ? `<div class="card mb"><h3>Also logged via Apple Health</h3><p class="muted">A food-tracking app synced ${appleNut.calories}kcal, ${appleNut.protein}g protein, ${appleNut.fiber}g fiber, ${appleNut.waterL}L water for this day. Not included in the totals above — log it manually below if you want it counted.</p></div>` : ""}
+      ${
+        appleNut
+          ? `<div class="card mb"><h3>Synced from MyFitnessPal (via Apple Health)</h3><p class="muted">${appleNut.calories}kcal, ${appleNut.protein}g protein, ${appleNut.fiber}g fiber, ${appleNut.waterL}L water logged for this day. Not included in the totals above yet.</p>
+        <div class="flex-between"><button class="btn small" id="log-mfp">Log these totals as today's meal</button>${appleNut.waterL ? `<button class="btn secondary small" id="log-mfp-water">+ Add ${appleNut.waterL}L to water</button>` : ""}</div>
+      </div>`
+          : ""
+      }
       <div class="card mb">
         <h2>Add a meal</h2>
         <div class="form-row">
@@ -214,6 +223,22 @@
       </div>
     `;
     bindDateNav(panel, renderNutrition);
+    if (appleNut) {
+      const mfpBtn = panel.querySelector("#log-mfp");
+      if (mfpBtn)
+        mfpBtn.addEventListener("click", () => {
+          Store.addMeal(date, { meal: "Synced from MyFitnessPal", food: "via Apple Health", calories: appleNut.calories, protein: appleNut.protein, fiber: appleNut.fiber });
+          toast("Logged");
+          renderNutrition();
+        });
+      const mfpWaterBtn = panel.querySelector("#log-mfp-water");
+      if (mfpWaterBtn)
+        mfpWaterBtn.addEventListener("click", () => {
+          Store.addWater(date, appleNut.waterL);
+          toast("Water added");
+          renderNutrition();
+        });
+    }
     panel.querySelector("#m-add").addEventListener("click", () => {
       const meal = panel.querySelector("#m-name").value;
       const food = panel.querySelector("#m-food").value;
@@ -402,10 +427,10 @@
         ${
           runs.length === 0
             ? '<p class="muted">No runs logged yet.</p>'
-            : `<table><thead><tr><th>Date</th><th>Distance</th><th>Duration</th><th>Pace</th><th>Avg HR</th><th>Max HR</th><th></th></tr></thead>
+            : `<table><thead><tr><th>Date</th><th>Distance</th><th>Duration</th><th>Pace</th><th>Avg HR</th><th>Max HR</th><th>Source</th><th></th></tr></thead>
           <tbody>${[...runs]
             .reverse()
-            .map((r) => `<tr><td>${fmtDateNice(r.date)}</td><td>${r.distanceKm} km</td><td>${r.durationMin} min</td><td>${paceStr(r.paceMinPerKm)}/km</td><td>${r.avgHR || "—"}</td><td>${r.maxHR || "—"}</td><td><button class="icon-btn" data-delrun="${r.id}">✕</button></td></tr>`)
+            .map((r) => `<tr><td>${fmtDateNice(r.date)}</td><td>${r.distanceKm} km</td><td>${r.durationMin} min</td><td>${paceStr(r.paceMinPerKm)}/km</td><td>${r.avgHR || "—"}</td><td>${r.maxHR || "—"}</td><td class="muted">${sourceLabel(r.source)}</td><td><button class="icon-btn" data-delrun="${r.id}">✕</button></td></tr>`)
             .join("")}</tbody></table>`
         }
       </div>
@@ -610,6 +635,12 @@
         <p id="ah-status" class="muted mt"></p>
       </div>
       <div class="card mb">
+        <h2>Strava Import</h2>
+        <p class="muted">Strava's API doesn't allow browser apps to talk to it directly (no CORS), so a one-time local script bridges the gap: <code>node scripts/strava_sync.js</code> run from the <code>health-fitness-dashboard</code> folder. It talks to Strava server-side and writes <code>strava-export.json</code> — select that file below. Full setup steps (getting your API keys and a refresh token) are in <code>README.md → Connecting Strava</code>.</p>
+        <input type="file" id="strava-file" accept=".json" />
+        <p id="strava-status" class="muted mt"></p>
+      </div>
+      <div class="card mb">
         <h2>10K Plan Start Date</h2>
         <p class="muted">Used to compute "this week's target" on the Running tab and Plans tab.</p>
         <input type="date" id="plan-start" value="${Store.state.planStartDate}" style="max-width:200px;" />
@@ -658,6 +689,22 @@
       } catch (err) {
         console.error(err);
         panel.querySelector("#ah-status").textContent = "Could not parse that file — make sure you selected export.xml.";
+      }
+    });
+    panel.querySelector("#strava-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      panel.querySelector("#strava-status").textContent = "Importing…";
+      try {
+        const text = await file.text();
+        const result = JSON.parse(text);
+        Store.mergeStrava(result);
+        panel.querySelector("#strava-status").textContent = `Imported ${(result.runs || []).length} run(s) and ${(result.workouts || []).length} workout(s).`;
+        toast("Strava data imported");
+        renderAll();
+      } catch (err) {
+        console.error(err);
+        panel.querySelector("#strava-status").textContent = "Could not read that file — make sure you selected strava-export.json.";
       }
     });
     panel.querySelector("#plan-start").addEventListener("change", (e) => {

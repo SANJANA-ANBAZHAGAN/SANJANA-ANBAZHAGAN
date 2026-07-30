@@ -35,6 +35,39 @@
     return `${y}-${m}-${day}`;
   }
 
+  // Cross-source dedup: a run already logged (manually or from another integration) on the same
+  // date with a similar duration/distance is treated as the same activity and skipped.
+  function mergeRunsAndWorkouts(s, runs, workouts, sourceTag, notesText) {
+    (runs || []).forEach((r) => {
+      const exists = s.runs.some(
+        (existing) =>
+          existing.date === r.date &&
+          Math.abs(existing.durationMin - r.durationMin) < 2 &&
+          Math.abs((existing.distanceKm || 0) - (r.distanceKm || 0)) < 0.3
+      );
+      if (!exists) {
+        s.runs.push({
+          id: `${sourceTag}_${r.date}_${Math.random().toString(36).slice(2, 7)}`,
+          date: r.date,
+          distanceKm: r.distanceKm,
+          durationMin: r.durationMin,
+          paceMinPerKm: r.durationMin / r.distanceKm,
+          avgHR: r.avgHR || null,
+          maxHR: r.maxHR || null,
+          notes: notesText,
+          source: sourceTag,
+        });
+      }
+    });
+    s.runs.sort((a, b) => a.date.localeCompare(b.date));
+
+    (workouts || []).forEach((w) => {
+      if (!s.workoutLog[w.date] || s.workoutLog[w.date].source !== "manual") {
+        s.workoutLog[w.date] = { done: true, type: w.type, source: sourceTag, note: "" };
+      }
+    });
+  }
+
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
@@ -191,30 +224,13 @@
         }
       });
 
-      (parsed.runs || []).forEach((r) => {
-        const exists = s.runs.some((existing) => existing.source === "apple_health" && existing.date === r.date && Math.abs(existing.durationMin - r.durationMin) < 1);
-        if (!exists) {
-          s.runs.push({
-            id: `ah_${r.date}_${Math.random().toString(36).slice(2, 7)}`,
-            date: r.date,
-            distanceKm: r.distanceKm,
-            durationMin: r.durationMin,
-            paceMinPerKm: r.durationMin / r.distanceKm,
-            avgHR: r.avgHR || null,
-            maxHR: r.maxHR || null,
-            notes: "Imported from Apple Health",
-            source: "apple_health",
-          });
-        }
-      });
-      s.runs.sort((a, b) => a.date.localeCompare(b.date));
+      mergeRunsAndWorkouts(s, parsed.runs, parsed.workouts, "apple_health", "Imported from Apple Health");
+      this.persist();
+    },
 
-      (parsed.workouts || []).forEach((w) => {
-        if (!s.workoutLog[w.date] || s.workoutLog[w.date].source !== "manual") {
-          s.workoutLog[w.date] = { done: true, type: w.type, source: "apple_health", note: "" };
-        }
-      });
-
+    mergeStrava(parsed) {
+      // parsed: { runs: [{date, distanceKm, durationMin, avgHR, maxHR}], workouts: [{date, type, durationMin}] }
+      mergeRunsAndWorkouts(this.state, parsed.runs, parsed.workouts, "strava", "Imported from Strava");
       this.persist();
     },
 

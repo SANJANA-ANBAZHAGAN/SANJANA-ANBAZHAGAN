@@ -53,12 +53,50 @@ The dashboard can pull in steps, active calories, resting heart rate, sleep, wei
 
 Repeat this export/import whenever you want to refresh the dashboard with your latest Apple Health data (e.g., weekly). Re-importing is safe — it won't duplicate your manually-logged meals, manually-marked workouts, or runs that were already imported.
 
-**What doesn't come from Apple Health:** protein, fiber, and meal-level calories — Apple Health only has those if you log food through an app like MyFitnessPal that syncs to Health. If it detects that data, it'll show a small reference note in the Nutrition tab, but won't add it to your totals automatically (to avoid double-counting if you also log manually). Log your meals directly in the Nutrition tab for the most reliable macro tracking.
+**What doesn't come from Apple Health:** protein, fiber, and meal-level calories — Apple Health only has those if you log food through an app like MyFitnessPal that syncs to Health. If it detects that data, the Nutrition tab shows a "Log MyFitnessPal totals" button that adds it to today's meals in one click (it won't do this automatically, to avoid double-counting if you also log manually).
+
+## Connecting Strava
+
+Strava has a real public API, but its `/oauth/token` endpoint doesn't send CORS headers, so a browser page cannot call it directly (you'll just get a blocked/failed request, not a helpful error). The fix is a tiny local script (`scripts/strava_sync.js`, uses only Node's built-in `fetch` — no npm install needed) that talks to Strava from your machine, not the browser, and writes a file the dashboard imports the same way it imports Apple Health data.
+
+**One-time setup:**
+
+1. Go to [strava.com/settings/api](https://www.strava.com/settings/api) and create an API application (any name/website works, e.g. "My Dashboard" / `http://localhost`). Note your **Client ID** and **Client Secret**.
+2. Authorize it for your own account. Visit this URL in your browser (replace `YOUR_CLIENT_ID`):
+   ```
+   https://www.strava.com/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=http://localhost&response_type=code&scope=activity:read_all
+   ```
+3. Click "Authorize". You'll land on a `localhost` page that fails to load — that's expected. Copy the `code=...` value out of the browser's address bar.
+4. Exchange that code for a refresh token (run this in a terminal, filling in your values):
+   ```
+   curl -X POST https://www.strava.com/oauth/token \
+     -d client_id=YOUR_CLIENT_ID \
+     -d client_secret=YOUR_CLIENT_SECRET \
+     -d code=THE_CODE_FROM_STEP_3 \
+     -d grant_type=authorization_code
+   ```
+   The response includes a `refresh_token` — save it.
+5. Create `health-fitness-dashboard/.strava.json` (this file is gitignored — it will never be committed):
+   ```json
+   {
+     "client_id": "YOUR_CLIENT_ID",
+     "client_secret": "YOUR_CLIENT_SECRET",
+     "refresh_token": "THE_REFRESH_TOKEN_FROM_STEP_4"
+   }
+   ```
+
+**Every time you want fresh data:**
+```
+cd health-fitness-dashboard
+node scripts/strava_sync.js
+```
+This writes `strava-export.json` (also gitignored). In the dashboard, go to **Settings → Strava Import** and select that file. Re-running the script only pulls activities since your last sync, and re-importing never duplicates a run that's already in the dashboard (it matches by date/duration/distance) — including one that came in via Apple Health instead, so it's safe to use both.
 
 ## Data & privacy
 
-- All logged data (meals, runs, check-ins, imported Apple Health data) is stored in `localStorage` in your browser — never sent to any server.
+- All logged data (meals, runs, check-ins, imported Apple Health/Strava data) is stored in `localStorage` in your browser — never sent to any server.
 - The Apple Health `export.xml` parsing happens client-side; the file is never uploaded anywhere.
+- Your Strava client secret and refresh token live only in `.strava.json` on your own machine — gitignored, never committed, never sent anywhere except Strava's own token endpoint.
 - Use **Settings → Export Backup** to download a `.json` snapshot of everything, and **Import Backup** to restore it (e.g., after clearing browser data, or on a new device/browser).
 
 ## File structure
@@ -67,6 +105,9 @@ Repeat this export/import whenever you want to refresh the dashboard with your l
 health-fitness-dashboard/
 ├── index.html                 # page shell + tab structure
 ├── css/styles.css             # all styling (light/dark aware)
+├── scripts/strava_sync.js     # local Strava sync (run with node, no install needed)
+├── .strava.json               # your Strava keys - gitignored, you create this
+├── strava-export.json         # sync output - gitignored, generated
 └── js/
     ├── profile.js             # your bio, targets, goals, weekly schedule
     ├── plans.js                # workout plan, 10K running plan, nutrition templates, grocery list
