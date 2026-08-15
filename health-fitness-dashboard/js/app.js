@@ -1,6 +1,7 @@
 (function () {
   const PROFILE = window.PROFILE;
   const PLANS = window.PLANS;
+  const ALL_PLAN_MEALS = PLANS.nutrition.days.flatMap((d) => d.meals);
   const charts = {};
   let AppState = { selectedDate: Store.todayStr(), weekStart: null, tab: "overview" };
   AppState.weekStart = startOfWeekStr(AppState.selectedDate);
@@ -69,11 +70,21 @@
     </div>`;
   }
 
+  function quickMealChips() {
+    return ALL_PLAN_MEALS.map(
+      (m, i) =>
+        `<button class="chip" data-chip-idx="${i}" title="${escapeHtml(m.food)}">
+          <span class="chip__name">${escapeHtml(m.short || m.meal)}</span>
+          <span class="chip__meta">${m.kcal}kcal · ${m.protein}g protein</span>
+        </button>`
+    ).join("");
+  }
+
   function bannersHTML(totals) {
     const T = PROFILE.targets;
     let html = "";
-    if (totals.calories > T.calorieMax) html += `<div class="banner bad">⚠️ Over calorie target by ${totals.calories - T.calorieMax} kcal</div>`;
-    if (totals.protein > 0 && totals.protein < T.proteinFlagG) html += `<div class="banner bad">⚠️ Protein is below ${T.proteinFlagG}g (currently ${totals.protein}g) — add a shake, Greek yogurt, or extra chicken/tofu</div>`;
+    if (totals.calories > T.calorieMax) html += `<div class="banner warn"><span class="banner__icon">🌙</span><span>A bit over your calorie range today (${totals.calories - T.calorieMax}kcal over ${T.calorieMax}) — no need to fix it now, just something to notice for tomorrow.</span></div>`;
+    if (totals.protein > 0 && totals.protein < T.proteinFlagG) html += `<div class="banner warn"><span class="banner__icon">💪</span><span>Protein's at ${totals.protein}g so far, under your ${T.proteinFlagG}g floor — a shake, Greek yogurt, or extra chicken/tofu would close the gap if you've got room left today.</span></div>`;
     return html;
   }
 
@@ -187,7 +198,7 @@
       ${bannersHTML(totals)}
       <div class="grid grid-cards mb">
         ${metricCard("Calories", totals.calories, "kcal", `Target ${T.calorieMin}-${T.calorieMax}`, calStatus, (totals.calories / T.calorieMax) * 100)}
-        ${metricCard("Protein", totals.protein, "g", `Target ${T.proteinMinG}-${T.proteinMaxG}g (flag below ${T.proteinFlagG}g)`, proStatus, (totals.protein / T.proteinMaxG) * 100)}
+        ${metricCard("Protein", totals.protein, "g", `Aiming for ${T.proteinMinG}-${T.proteinMaxG}g`, proStatus, (totals.protein / T.proteinMaxG) * 100)}
         ${metricCard("Fiber", totals.fiber, "g", `Target ${T.fiberMinG}-${T.fiberMaxG}g`, fiberStatus, (totals.fiber / T.fiberMaxG) * 100)}
       </div>
       ${
@@ -198,7 +209,12 @@
           : ""
       }
       <div class="card mb">
-        <h2>Add a meal</h2>
+        <h2>From your plan</h2>
+        <p class="muted" style="margin-top:-4px;">Tap one to log it instantly — no typing.</p>
+        <div class="chip-row">${quickMealChips()}</div>
+      </div>
+      <div class="card mb">
+        <h2>Or add anything else</h2>
         <div class="form-row">
           <div class="field"><label>Meal</label>
             <select id="m-name"><option>Breakfast</option><option>Mid-morning snack</option><option>Lunch</option><option>Afternoon snack</option><option>Dinner</option><option>Other</option></select>
@@ -216,13 +232,21 @@
         <h2>Logged — ${fmtDateNice(date)}</h2>
         ${
           meals.length === 0
-            ? '<p class="muted">No meals logged yet.</p>'
+            ? '<p class="muted">Nothing logged yet today — add something whenever you get to it.</p>'
             : `<table><thead><tr><th>Meal</th><th>Food</th><th>Kcal</th><th>Protein</th><th>Fiber</th><th></th></tr></thead>
           <tbody>${meals.map((m) => `<tr><td>${m.meal}</td><td>${escapeHtml(m.food || "")}</td><td>${m.calories}</td><td>${m.protein}g</td><td>${m.fiber}g</td><td><button class="icon-btn" data-del="${m.id}">✕</button></td></tr>`).join("")}</tbody></table>`
         }
       </div>
     `;
     bindDateNav(panel, renderNutrition);
+    panel.querySelectorAll("[data-chip-idx]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        const m = ALL_PLAN_MEALS[Number(btn.dataset.chipIdx)];
+        Store.addMeal(date, { meal: m.meal, food: m.short, calories: m.kcal, protein: m.protein, fiber: m.fiber });
+        toast(`Logged ${m.short}`);
+        renderNutrition();
+      })
+    );
     if (appleNut) {
       const mfpBtn = panel.querySelector("#log-mfp");
       if (mfpBtn)
@@ -426,7 +450,7 @@
         <h2>Run log</h2>
         ${
           runs.length === 0
-            ? '<p class="muted">No runs logged yet.</p>'
+            ? '<p class="muted">No runs yet — log your next one below.</p>'
             : `<table><thead><tr><th>Date</th><th>Distance</th><th>Duration</th><th>Pace</th><th>Avg HR</th><th>Max HR</th><th>Source</th><th></th></tr></thead>
           <tbody>${[...runs]
             .reverse()
@@ -787,15 +811,81 @@
     renderTab(AppState.tab);
   }
   function switchTab(name) {
-    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+    document.querySelectorAll(".tab-btn, .bn-btn[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+    const moreBtn = document.querySelector('.bn-btn[data-sheet="more"]');
+    if (moreBtn) moreBtn.classList.toggle("active", ["goals", "plans", "settings"].includes(name));
     document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === "tab-" + name));
     AppState.tab = name;
     renderTab(name);
   }
 
+  // ---------- Bottom nav / quick-log sheet (phone-first) ----------
+  function openSheet(id) {
+    closeSheets();
+    document.getElementById(id).classList.add("open");
+    document.getElementById("sheet-backdrop").classList.add("open");
+  }
+  function closeSheets() {
+    document.querySelectorAll(".sheet").forEach((s) => s.classList.remove("open"));
+    document.getElementById("sheet-backdrop").classList.remove("open");
+  }
+  function focusFieldOnTab(tabName, fieldId) {
+    switchTab(tabName);
+    setTimeout(() => {
+      const el = document.querySelector(`#tab-${tabName} #${fieldId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.focus();
+      }
+    }, 60);
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("header-date").textContent = `Welcome back, ${PROFILE.name} — ${new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`;
-    document.querySelectorAll(".tab-btn").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+    document.querySelectorAll(".tab-btn, #bottom-nav .bn-btn[data-tab]").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+
+    document.getElementById("fab").addEventListener("click", () => {
+      const sched = scheduleForDate(Store.todayStr());
+      document.getElementById("quick-today-label").textContent = sched.type === "rest" ? "today's a rest day" : sched.label;
+      openSheet("quick-sheet");
+    });
+    document.querySelector('.bn-btn[data-sheet="more"]').addEventListener("click", () => openSheet("more-sheet"));
+    document.getElementById("sheet-backdrop").addEventListener("click", closeSheets);
+    document.querySelectorAll("#more-sheet [data-tab]").forEach((b) =>
+      b.addEventListener("click", () => {
+        closeSheets();
+        switchTab(b.dataset.tab);
+      })
+    );
+    document.querySelectorAll("#quick-sheet [data-quick]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const action = b.dataset.quick;
+        const today = Store.todayStr();
+        if (action === "water250" || action === "water500") {
+          Store.addWater(today, action === "water250" ? 0.25 : 0.5);
+          toast("Water logged");
+          closeSheets();
+          if (AppState.tab === "overview") renderOverview();
+        } else if (action === "workout-done") {
+          const sched = scheduleForDate(today);
+          if (sched.type === "rest") {
+            toast("Today's a rest day — nothing to mark");
+          } else {
+            Store.setWorkoutDone(today, true, sched.label, "manual");
+            toast("Marked done — nice work");
+          }
+          closeSheets();
+          if (AppState.tab === "workouts") renderWorkouts();
+        } else if (action === "log-meal") {
+          closeSheets();
+          focusFieldOnTab("nutrition", "m-food");
+        } else if (action === "log-run") {
+          closeSheets();
+          focusFieldOnTab("running", "r-dist");
+        }
+      })
+    );
+
     renderOverview();
   });
 })();

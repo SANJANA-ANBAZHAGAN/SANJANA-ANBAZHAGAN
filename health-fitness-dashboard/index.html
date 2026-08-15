@@ -36,6 +36,65 @@
     <section id="tab-settings" class="tab-panel"></section>
   </main>
 
+  <nav class="bottom-nav" id="bottom-nav">
+    <div class="bottom-nav__inner">
+      <button class="bn-btn active" data-tab="overview"><span class="bn-icon">🏠</span>Today</button>
+      <button class="bn-btn" data-tab="nutrition"><span class="bn-icon">🍽️</span>Log</button>
+      <button class="bn-btn" data-tab="workouts"><span class="bn-icon">💪</span>Moves</button>
+      <button class="bn-btn" data-tab="running"><span class="bn-icon">🏃‍♀️</span>Runs</button>
+      <button class="bn-btn" data-sheet="more"><span class="bn-icon">•••</span>More</button>
+    </div>
+  </nav>
+
+  <button class="fab" id="fab" aria-label="Quick log" title="Quick log">+</button>
+
+  <div class="sheet-backdrop" id="sheet-backdrop"></div>
+
+  <div class="sheet" id="quick-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__title">Quick log</div>
+    <button class="sheet__row" data-quick="water250">
+      <span class="sheet__icon">💧</span>
+      <span class="sheet__row-text">+250ml water</span>
+    </button>
+    <button class="sheet__row" data-quick="water500">
+      <span class="sheet__icon">💧</span>
+      <span class="sheet__row-text">+500ml water</span>
+    </button>
+    <button class="sheet__row" data-quick="workout-done">
+      <span class="sheet__icon">✓</span>
+      <span class="sheet__row-text">
+        Mark today's workout done
+        <span class="sheet__desc" id="quick-today-label"></span>
+      </span>
+    </button>
+    <button class="sheet__row" data-quick="log-meal">
+      <span class="sheet__icon">🍽️</span>
+      <span class="sheet__row-text">Log a meal</span>
+    </button>
+    <button class="sheet__row" data-quick="log-run">
+      <span class="sheet__icon">🏃‍♀️</span>
+      <span class="sheet__row-text">Log a run</span>
+    </button>
+  </div>
+
+  <div class="sheet" id="more-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__title">More</div>
+    <button class="sheet__row" data-tab="goals">
+      <span class="sheet__icon">🎯</span>
+      <span class="sheet__row-text">Body Goals</span>
+    </button>
+    <button class="sheet__row" data-tab="plans">
+      <span class="sheet__icon">📋</span>
+      <span class="sheet__row-text">Plans</span>
+    </button>
+    <button class="sheet__row" data-tab="settings">
+      <span class="sheet__icon">⚙️</span>
+      <span class="sheet__row-text">Settings</span>
+    </button>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <script src="js/vendor/chart.umd.js"></script>
