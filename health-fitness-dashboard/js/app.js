@@ -3,7 +3,7 @@
   const PLANS = window.PLANS;
   const ALL_PLAN_MEALS = PLANS.nutrition.days.flatMap((d) => d.meals);
   const charts = {};
-  let AppState = { selectedDate: Store.todayStr(), weekStart: null, tab: "overview" };
+  let AppState = { selectedDate: Store.todayStr(), weekStart: null, reportMonth: Store.todayStr().slice(0, 7), tab: "overview" };
   AppState.weekStart = startOfWeekStr(AppState.selectedDate);
 
   // ---------- utilities ----------
@@ -520,6 +520,45 @@
       options: { responsive: true, maintainAspectRatio: false },
     });
   }
+  function daysInMonth(yyyymm) {
+    const [y, m] = yyyymm.split("-").map(Number);
+    const count = new Date(y, m, 0).getDate();
+    return [...Array(count)].map((_, i) => `${yyyymm}-${String(i + 1).padStart(2, "0")}`);
+  }
+  function addMonthsStr(yyyymm, n) {
+    const [y, m] = yyyymm.split("-").map(Number);
+    const d = new Date(y, m - 1 + n, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }
+  function monthlyReport(yyyymm) {
+    const days = daysInMonth(yyyymm);
+    const weightPts = seriesFromMap(Store.state.weight).filter((p) => p.date.startsWith(yyyymm));
+    const bfPts = seriesFromMap(Store.state.bodyFat).filter((p) => p.date.startsWith(yyyymm));
+    const runsInMonth = Store.state.runs.filter((r) => r.date.startsWith(yyyymm));
+    const sleepVals = days.map((d) => (Store.state.sleep[d] ? Store.state.sleep[d].hours : null)).filter((v) => v != null);
+    const mandatoryDows = [1, 2, 3, 4, 6];
+    let expected = 0,
+      done = 0;
+    days.forEach((d) => {
+      if (mandatoryDows.includes(parseLocalDate(d).getDay())) {
+        expected++;
+        const log = Store.state.workoutLog[d];
+        if (log && log.done) done++;
+      }
+    });
+    return {
+      weightChange: weightPts.length >= 2 ? weightPts[weightPts.length - 1].value - weightPts[0].value : null,
+      weightCount: weightPts.length,
+      bfChange: bfPts.length >= 2 ? bfPts[bfPts.length - 1].value - bfPts[0].value : null,
+      bfCount: bfPts.length,
+      runsCompleted: runsInMonth.length,
+      runsDistance: runsInMonth.reduce((a, r) => a + r.distanceKm, 0),
+      workoutsDone: done,
+      workoutsExpected: expected,
+      avgSleep: sleepVals.length ? sleepVals.reduce((a, b) => a + b, 0) / sleepVals.length : null,
+    };
+  }
+
   function renderGoals() {
     const panel = document.getElementById("tab-goals");
     const G = PROFILE.goals;
@@ -529,6 +568,8 @@
     const latestWeight = weightSeries.length ? weightSeries[weightSeries.length - 1].value : G.weight.fromKg;
     const latestBF = bfSeries.length ? bfSeries[bfSeries.length - 1].value : G.bodyFatPct.from;
     const latestVF = vfSeries.length ? vfSeries[vfSeries.length - 1].value : G.visceralFat.from;
+    const report = monthlyReport(AppState.reportMonth);
+    const monthLabel = parseLocalDate(`${AppState.reportMonth}-01`).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
     panel.innerHTML = `
       <div class="grid grid-cards mb">
@@ -539,6 +580,20 @@
       <div class="card mb"><h3>Weight Trend</h3><div class="chart-wrap"><canvas id="weight-chart"></canvas></div></div>
       <div class="card mb"><h3>Body Fat % Trend</h3><div class="chart-wrap"><canvas id="bf-chart"></canvas></div></div>
       <div class="card mb"><h3>Visceral Fat Trend</h3><div class="chart-wrap"><canvas id="vf-chart"></canvas></div></div>
+      <div class="card mb">
+        <div class="flex-between mb">
+          <button class="btn secondary small" data-month="-1">← Prev month</button>
+          <strong>${monthLabel}</strong>
+          <button class="btn secondary small" data-month="1">Next month →</button>
+        </div>
+        <div class="grid grid-cards">
+          <div class="metric-card"><h3>Weight change</h3><div class="value">${report.weightChange != null ? (report.weightChange > 0 ? "+" : "") + report.weightChange.toFixed(1) : "—"}${report.weightChange != null ? '<span class="unit">kg</span>' : ""}</div><div class="target">${report.weightCount} check-in${report.weightCount === 1 ? "" : "s"} this month</div></div>
+          <div class="metric-card"><h3>Body fat change</h3><div class="value">${report.bfChange != null ? (report.bfChange > 0 ? "+" : "") + report.bfChange.toFixed(1) : "—"}${report.bfChange != null ? '<span class="unit">%</span>' : ""}</div><div class="target">${report.bfCount} check-in${report.bfCount === 1 ? "" : "s"} this month</div></div>
+          <div class="metric-card"><h3>Runs completed</h3><div class="value">${report.runsCompleted}</div><div class="target">${report.runsDistance.toFixed(1)} km total</div></div>
+          <div class="metric-card"><h3>Workouts hit</h3><div class="value">${report.workoutsDone}<span class="unit">/${report.workoutsExpected}</span></div><div class="target">mandatory sessions</div></div>
+          <div class="metric-card"><h3>Avg sleep</h3><div class="value">${report.avgSleep != null ? report.avgSleep.toFixed(1) : "—"}${report.avgSleep != null ? '<span class="unit">hrs</span>' : ""}</div><div class="target">nights logged</div></div>
+        </div>
+      </div>
       <div class="card">
         <h2>Log a check-in</h2>
         <div class="form-row">
@@ -550,6 +605,12 @@
         <button class="btn" id="g-save">Save check-in</button>
       </div>
     `;
+    panel.querySelectorAll("[data-month]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        AppState.reportMonth = addMonthsStr(AppState.reportMonth, Number(btn.dataset.month));
+        renderGoals();
+      })
+    );
     panel.querySelector("#g-save").addEventListener("click", () => {
       const date = panel.querySelector("#g-date").value;
       const w = panel.querySelector("#g-weight").value;
@@ -566,12 +627,95 @@
     renderThresholdChart("vf-chart", "visceralFat", vfSeries, G.visceralFat.below);
   }
 
+  // ---------- Wellness (hair health, supplements, sleep) ----------
+  function ordinalDay(dateStr) {
+    const d = parseLocalDate(dateStr);
+    const start = new Date(d.getFullYear(), 0, 0);
+    return Math.floor((d - start) / 86400000);
+  }
+  function isIronDay(dateStr) {
+    return ordinalDay(dateStr) % 2 === 0;
+  }
+  function renderWellness() {
+    const panel = document.getElementById("tab-wellness");
+    const date = AppState.selectedDate;
+    const hair = Store.state.hairChecklist[date] || {};
+    const hairDone = PLANS.hairHealth.items.filter((i) => hair[i.key]).length;
+    const supp = Store.state.supplements[date] || {};
+    const ironToday = isIronDay(date);
+
+    const sleepDates = [...Array(7)].map((_, i) => addDaysStr(Store.todayStr(), -i));
+    const sleepVals = sleepDates.map((d) => (Store.state.sleep[d] ? Store.state.sleep[d].hours : null)).filter((v) => v != null);
+    const sleepAvg = sleepVals.length ? sleepVals.reduce((a, b) => a + b, 0) / sleepVals.length : null;
+
+    panel.innerHTML = `
+      ${dateNavHTML(date)}
+      <div class="card mb">
+        <div class="flex-between">
+          <h2>Hair Health Checklist</h2>
+          <span class="badge ${hairDone >= 4 ? "good" : "neutral"}">${hairDone}/${PLANS.hairHealth.items.length} today</span>
+        </div>
+        <p class="muted" style="margin-top:-2px;">${PLANS.hairHealth.note}</p>
+        <div class="checklist">
+          ${PLANS.hairHealth.items
+            .map(
+              (i) => `<label class="check-row">
+            <input type="checkbox" data-hair="${i.key}" ${hair[i.key] ? "checked" : ""} />
+            <span>${i.label}</span>
+          </label>`
+            )
+            .join("")}
+        </div>
+      </div>
+      <div class="card mb">
+        <h2>Supplements</h2>
+        <p class="muted" style="margin-top:-2px;">${PLANS.supplements.note}</p>
+        <div class="checklist">
+          ${PLANS.supplements.items
+            .map((i) => {
+              const skip = i.key === "iron" && !ironToday;
+              return `<label class="check-row ${skip ? "check-row--skip" : ""}">
+            <input type="checkbox" data-supp="${i.key}" ${supp[i.key] ? "checked" : ""} ${skip ? "disabled" : ""} />
+            <span>${i.label} <span class="muted" style="font-size:11.5px;">— ${skip ? "not today, alternate-day" : i.time}</span></span>
+          </label>`;
+            })
+            .join("")}
+        </div>
+      </div>
+      <div class="card">
+        <h3>Sleep — last 7 days</h3>
+        <div class="stat-value">${sleepAvg != null ? sleepAvg.toFixed(1) : "—"}<span class="unit">hrs avg</span></div>
+        ${
+          sleepAvg == null
+            ? '<p class="muted">Log sleep on the Overview tab to see this fill in.</p>'
+            : sleepAvg < 7
+              ? '<p class="muted">Running under 7h this week — worth an earlier night when you can, especially with the training load.</p>'
+              : '<p class="muted">Nice, at or above 7h average this week.</p>'
+        }
+      </div>
+    `;
+    bindDateNav(panel, renderWellness);
+    panel.querySelectorAll("[data-hair]").forEach((cb) =>
+      cb.addEventListener("change", () => {
+        Store.toggleHairItem(date, cb.dataset.hair);
+        renderWellness();
+      })
+    );
+    panel.querySelectorAll("[data-supp]").forEach((cb) =>
+      cb.addEventListener("change", () => {
+        Store.toggleSupplement(date, cb.dataset.supp);
+        renderWellness();
+      })
+    );
+  }
+
   // ---------- Plans ----------
   function renderPlans() {
     const panel = document.getElementById("tab-plans");
     const dowOrder = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
     const dowLabels = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
     const weekNum = currentPlanWeek();
+    const mealPrepState = Store.state.mealPrepChecked[startOfWeekStr(Store.todayStr())] || {};
 
     panel.innerHTML = `
       <div class="section-title"><h2>Weekly Workout Plan</h2></div>
@@ -630,6 +774,21 @@
           )
           .join("")}
       </div>
+
+      <div class="section-title"><h2>Sunday Meal Prep</h2></div>
+      <div class="card">
+        <p class="muted">${PLANS.mealPrep.note}</p>
+        <div class="checklist">
+          ${PLANS.mealPrep.items
+            .map(
+              (i) => `<label class="check-row">
+            <input type="checkbox" data-prep="${i.key}" ${mealPrepState[i.key] ? "checked" : ""} />
+            <span>${i.label}</span>
+          </label>`
+            )
+            .join("")}
+        </div>
+      </div>
     `;
     panel.querySelectorAll("[data-acc] .accordion__head").forEach((h) => h.addEventListener("click", () => h.parentElement.classList.toggle("open")));
     panel.querySelectorAll("[data-log-template]").forEach((btn) =>
@@ -643,6 +802,12 @@
     panel.querySelectorAll("[data-grocery]").forEach((cb) =>
       cb.addEventListener("change", () => {
         Store.toggleGrocery(cb.dataset.grocery);
+        renderPlans();
+      })
+    );
+    panel.querySelectorAll("[data-prep]").forEach((cb) =>
+      cb.addEventListener("change", () => {
+        Store.toggleMealPrepItem(startOfWeekStr(Store.todayStr()), cb.dataset.prep);
         renderPlans();
       })
     );
@@ -799,6 +964,9 @@
       case "goals":
         renderGoals();
         break;
+      case "wellness":
+        renderWellness();
+        break;
       case "plans":
         renderPlans();
         break;
@@ -813,7 +981,7 @@
   function switchTab(name) {
     document.querySelectorAll(".tab-btn, .bn-btn[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
     const moreBtn = document.querySelector('.bn-btn[data-sheet="more"]');
-    if (moreBtn) moreBtn.classList.toggle("active", ["goals", "plans", "settings"].includes(name));
+    if (moreBtn) moreBtn.classList.toggle("active", ["goals", "wellness", "plans", "settings"].includes(name));
     document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === "tab-" + name));
     AppState.tab = name;
     renderTab(name);

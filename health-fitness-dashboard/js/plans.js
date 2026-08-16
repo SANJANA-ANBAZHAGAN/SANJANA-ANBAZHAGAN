@@ -106,6 +106,9 @@ window.PLANS = {
       "Pair a protein + a fiber source at every meal (beans, veg, whole grains, fruit) to hit the fiber target and stay full on a calorie deficit.",
       "Any swap works as long as it lands in the same calorie/protein/fiber ballpark — use the dashboard's Nutrition Tracker to check.",
       "Have a bottle of water on your desk and refill 2-3x through the workday — that alone gets you to 2.5L.",
+      "Don't cut below this range to speed things up — between the strength training, the running, and everything else your body's doing, this deficit is already working. Going lower risks muscle loss, worse recovery, and undercuts the running.",
+      "Extra hunger in the week before your period is normal, not a willpower problem — metabolism can run 100-300 kcal higher in the luteal phase. Give yourself an extra 150-200 kcal that week without guilt.",
+      "When hunger hits between meals, check your last meal's protein first — under 35g there is the usual culprit. Otherwise reach for volume: cucumber, celery, broth, an extra egg (~70kcal, 6g protein), or sparkling water with lemon.",
     ],
     // 4 rotating day templates, ~1550-1650 kcal / ~108g protein / ~30g fiber each.
     // Non-veg option listed first, veg swap in parentheses.
@@ -222,6 +225,42 @@ window.PLANS = {
           "Low-sodium taco seasoning",
         ],
       },
+    ],
+  },
+
+  hairHealth: {
+    note: "Daily check-in, not a strict quota — most days is what matters, not every single day.",
+    items: [
+      { key: "eggs", label: "Eggs" },
+      { key: "spinachLemon", label: "Spinach + lemon together" },
+      { key: "pumpkinSeeds", label: "Pumpkin seeds" },
+      { key: "walnutsChia", label: "Walnuts or chia seeds" },
+      { key: "ironVitC", label: "Iron-rich meal + vitamin C together" },
+      { key: "water", label: "2.5L water" },
+    ],
+  },
+
+  // Her existing regimen - this app tracks adherence to it, it does not decide dosing.
+  // Iron is every-other-day by design; the dashboard marks which days are "iron days" for her automatically.
+  supplements: {
+    note: "Tracking what you're already taking - not medical advice. Check with your doctor before changing dosing, especially iron.",
+    items: [
+      { key: "multivitamin", label: "Sports Research Multivitamin", time: "Morning", frequency: "daily" },
+      { key: "iron", label: "Vitron-C Iron", time: "Morning", frequency: "alternate" },
+      { key: "omega3", label: "Omega-3 Fish Oil", time: "Dinner", frequency: "daily" },
+      { key: "magnesium", label: "Magnesium Glycinate", time: "Bedtime", frequency: "daily" },
+    ],
+  },
+
+  mealPrep: {
+    note: "Sunday, ~60-90 min. Check off as you go.",
+    items: [
+      { key: "protein", label: "Protein batch cooked" },
+      { key: "rice", label: "Brown rice cooked" },
+      { key: "veg", label: "Vegetables roasted" },
+      { key: "eggs", label: "Eggs boiled" },
+      { key: "oats", label: "Overnight oats prepped" },
+      { key: "containers", label: "Containers labelled and packed" },
     ],
   },
 };

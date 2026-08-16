@@ -21,6 +21,9 @@
       workoutLog: {}, // date -> {done, type, source, note, restOk}
       runs: [], // [{id, date, distanceKm, durationMin, paceMinPerKm, avgHR, maxHR, notes, source}]
       groceryChecked: {}, // itemName -> bool
+      hairChecklist: {}, // date -> {eggs, spinachLemon, pumpkinSeeds, walnutsChia, ironVitC, water: bool}
+      supplements: {}, // date -> {multivitamin, iron, omega3, magnesium: bool}
+      mealPrepChecked: {}, // weekStartDate -> {protein, rice, veg, eggs, oats, containers: bool}
     };
   }
 
@@ -181,6 +184,22 @@
     },
     toggleGrocery(item) {
       this.state.groceryChecked[item] = !this.state.groceryChecked[item];
+      this.persist();
+    },
+
+    toggleHairItem(date, key) {
+      if (!this.state.hairChecklist[date]) this.state.hairChecklist[date] = {};
+      this.state.hairChecklist[date][key] = !this.state.hairChecklist[date][key];
+      this.persist();
+    },
+    toggleSupplement(date, key) {
+      if (!this.state.supplements[date]) this.state.supplements[date] = {};
+      this.state.supplements[date][key] = !this.state.supplements[date][key];
+      this.persist();
+    },
+    toggleMealPrepItem(weekStart, key) {
+      if (!this.state.mealPrepChecked[weekStart]) this.state.mealPrepChecked[weekStart] = {};
+      this.state.mealPrepChecked[weekStart][key] = !this.state.mealPrepChecked[weekStart][key];
       this.persist();
     },
 
