@@ -917,6 +917,9 @@
   // ---------- Settings ----------
   function renderSettings() {
     const panel = document.getElementById("tab-settings");
+    const lastBackup = Store.state.lastBackupAt;
+    const daysSinceBackup = lastBackup ? Math.floor((Date.now() - new Date(lastBackup).getTime()) / 86400000) : null;
+    const backupBadge = !lastBackup ? '<span class="badge warn">Never backed up</span>' : daysSinceBackup >= 14 ? `<span class="badge warn">${daysSinceBackup} days ago</span>` : `<span class="badge good">${daysSinceBackup === 0 ? "today" : daysSinceBackup + "d ago"}</span>`;
     panel.innerHTML = `
       <div class="card mb">
         <h2>Apple Health Import</h2>
@@ -953,8 +956,8 @@
         <button class="btn" id="md-save">Save</button>
       </div>
       <div class="card mb">
-        <h2>Backup</h2>
-        <p class="muted">Your data lives only in this browser's local storage. Export a backup regularly, or to move it to a new device/browser.</p>
+        <div class="flex-between"><h2 style="margin:0;">Backup</h2>${backupBadge}</div>
+        <p class="muted">Your data lives only in this browser's local storage. ${!lastBackup ? "You haven't exported one yet — worth doing now." : daysSinceBackup >= 14 ? "It's been a while — worth doing again." : "Export a backup regularly, or to move it to a new device/browser."}</p>
         <div class="flex-between">
           <button class="btn secondary" id="export-backup">Export Backup (.json)</button>
           <label class="btn secondary" style="cursor:pointer;">Import Backup<input type="file" id="import-backup" accept=".json" style="display:none;" /></label>
@@ -1025,6 +1028,9 @@
       a.href = URL.createObjectURL(blob);
       a.download = `health-dashboard-backup-${Store.todayStr()}.json`;
       a.click();
+      Store.markBackedUp();
+      toast("Backup downloaded");
+      renderSettings();
     });
     panel.querySelector("#import-backup").addEventListener("change", async (e) => {
       const file = e.target.files[0];

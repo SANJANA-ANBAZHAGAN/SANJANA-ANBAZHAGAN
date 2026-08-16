@@ -25,6 +25,7 @@
       supplements: {}, // date -> {multivitamin, iron, omega3, magnesium: bool}
       mealPrepChecked: {}, // weekStartDate -> {protein, rice, veg, eggs, oats, containers: bool}
       cycleSettings: { lastPeriodStart: null, cycleLengthDays: 28 },
+      lastBackupAt: null, // ISO timestamp, set when Export Backup is used
     };
   }
 
@@ -262,6 +263,10 @@
 
     exportBackup() {
       return JSON.stringify(this.state, null, 2);
+    },
+    markBackedUp() {
+      this.state.lastBackupAt = new Date().toISOString();
+      this.persist();
     },
     importBackup(jsonStr) {
       const parsed = JSON.parse(jsonStr);
