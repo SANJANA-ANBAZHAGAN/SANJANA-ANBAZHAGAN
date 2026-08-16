@@ -11,7 +11,8 @@
 
 ## Projects
 - 🏋️‍♀️ [Health & Fitness Dashboard](./health-fitness-dashboard) — a personal dashboard for tracking nutrition, workouts, and running progress, with Apple Health import.
-- 💰 [Budget Tracker](./budget-tracker) — a personal spending tracker with AI-parsed statement uploads, merchant rules, split expenses, and monthly budgets by category.
+- 💰 [Budget Tracker](./budget-tracker) — a hosted version of the tracker below: same features, reachable from any device via GitHub Pages, but needs your own Anthropic API key (small per-use cost).
+- 🧾 [Personal Budget Tracker (Claude.ai artifact)](./personal-budget-tracker) — statement uploads parsed for free via Claude.ai, merchant rules, split expenses, receipt itemization, savings goals, and monthly budgets by category. No API key, no hosting — paste it into a Claude.ai conversation. Data lives in that one conversation only.
 
 ## Certifications
 - CompTIA Security+
