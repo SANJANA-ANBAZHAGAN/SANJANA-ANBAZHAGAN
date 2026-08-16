@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sanjana's Health &amp; Fitness Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header__title">
+      <span class="app-header__logo">🏋️‍♀️</span>
+      <div>
+        <h1>Health &amp; Fitness Dashboard</h1>
+        <p id="header-date" class="app-header__subtitle"></p>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="overview">Daily Overview</button>
+      <button class="tab-btn" data-tab="nutrition">Nutrition</button>
+      <button class="tab-btn" data-tab="workouts">Workouts</button>
+      <button class="tab-btn" data-tab="running">Running</button>
+      <button class="tab-btn" data-tab="goals">Body Goals</button>
+      <button class="tab-btn" data-tab="wellness">Wellness</button>
+      <button class="tab-btn" data-tab="plans">Plans</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <main id="app">
+    <section id="tab-overview" class="tab-panel active"></section>
+    <section id="tab-nutrition" class="tab-panel"></section>
+    <section id="tab-workouts" class="tab-panel"></section>
+    <section id="tab-running" class="tab-panel"></section>
+    <section id="tab-goals" class="tab-panel"></section>
+    <section id="tab-wellness" class="tab-panel"></section>
+    <section id="tab-plans" class="tab-panel"></section>
+    <section id="tab-settings" class="tab-panel"></section>
+  </main>
+
+  <nav class="bottom-nav" id="bottom-nav">
+    <div class="bottom-nav__inner">
+      <button class="bn-btn active" data-tab="overview"><span class="bn-icon">🏠</span>Today</button>
+      <button class="bn-btn" data-tab="nutrition"><span class="bn-icon">🍽️</span>Log</button>
+      <button class="bn-btn" data-tab="workouts"><span class="bn-icon">💪</span>Moves</button>
+      <button class="bn-btn" data-tab="running"><span class="bn-icon">🏃‍♀️</span>Runs</button>
+      <button class="bn-btn" data-sheet="more"><span class="bn-icon">•••</span>More</button>
+    </div>
+  </nav>
+
+  <button class="fab" id="fab" aria-label="Quick log" title="Quick log">+</button>
+
+  <div class="sheet-backdrop" id="sheet-backdrop"></div>
+
+  <div class="sheet" id="quick-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__title">Quick log</div>
+    <button class="sheet__row" data-quick="water250">
+      <span class="sheet__icon">💧</span>
+      <span class="sheet__row-text">+250ml water</span>
+    </button>
+    <button class="sheet__row" data-quick="water500">
+      <span class="sheet__icon">💧</span>
+      <span class="sheet__row-text">+500ml water</span>
+    </button>
+    <button class="sheet__row" data-quick="workout-done">
+      <span class="sheet__icon">✓</span>
+      <span class="sheet__row-text">
+        Mark today's workout done
+        <span class="sheet__desc" id="quick-today-label"></span>
+      </span>
+    </button>
+    <button class="sheet__row" data-quick="log-meal">
+      <span class="sheet__icon">🍽️</span>
+      <span class="sheet__row-text">Log a meal</span>
+    </button>
+    <button class="sheet__row" data-quick="log-run">
+      <span class="sheet__icon">🏃‍♀️</span>
+      <span class="sheet__row-text">Log a run</span>
+    </button>
+  </div>
+
+  <div class="sheet" id="more-sheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__title">More</div>
+    <button class="sheet__row" data-tab="goals">
+      <span class="sheet__icon">🎯</span>
+      <span class="sheet__row-text">Body Goals</span>
+    </button>
+    <button class="sheet__row" data-tab="wellness">
+      <span class="sheet__icon">🌸</span>
+      <span class="sheet__row-text">Wellness</span>
+    </button>
+    <button class="sheet__row" data-tab="plans">
+      <span class="sheet__icon">📋</span>
+      <span class="sheet__row-text">Plans</span>
+    </button>
+    <button class="sheet__row" data-tab="settings">
+      <span class="sheet__icon">⚙️</span>
+      <span class="sheet__row-text">Settings</span>
+    </button>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/vendor/chart.umd.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/plans.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/appleHealthImport.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

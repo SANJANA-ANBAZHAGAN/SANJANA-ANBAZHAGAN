@@ -1,0 +1,6 @@
+# Strava credentials & sync output - personal, never commit
+.strava.json
+strava-export.json
+
+# local backups you might drop here
+*.backup.json

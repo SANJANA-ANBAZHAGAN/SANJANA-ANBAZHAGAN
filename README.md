@@ -9,6 +9,9 @@
 - ![Python](https://img.shields.io/badge/-Python-000?&logo=Python)
 - ![C](https://img.shields.io/badge/-C-000?&logo=C)
 
+## Projects
+- 🏋️‍♀️ [Health & Fitness Dashboard](./health-fitness-dashboard) — a personal dashboard for tracking nutrition, workouts, and running progress, with Apple Health import.
+
 ## Certifications
 - CompTIA Security+
 - ISC2 Certified in Cybersecurity
