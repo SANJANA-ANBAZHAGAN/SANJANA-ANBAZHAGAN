@@ -115,6 +115,8 @@
 
   // ---------- Daily Overview ----------
   function renderOverview() {
+    checkAchievements();
+    refreshHeaderLevel();
     const panel = document.getElementById("tab-overview");
     const date = AppState.selectedDate;
     const totals = Store.dayTotals(date);
@@ -149,12 +151,12 @@
         </div>
       </div>
       ${bannersHTML(totals)}
-      <div class="grid grid-cards mb">
-        ${metricCard("Calories", totals.calories || "—", "kcal", `Target ${T.calorieMin}-${T.calorieMax}`, calStatus, (totals.calories / T.calorieMax) * 100)}
-        ${metricCard("Protein", totals.protein || "—", "g", `Target ${T.proteinMinG}-${T.proteinMaxG}g`, proStatus, (totals.protein / T.proteinMaxG) * 100)}
-        ${metricCard("Water", water || "—", "L", `Min ${T.waterMinL}L`, waterStatus, (water / T.waterMinL) * 100)}
-        ${metricCard("Steps", steps || "—", "", `Target ${T.stepsMin.toLocaleString()}-${T.stepsMax.toLocaleString()}`, stepsStatus, (steps / T.stepsMax) * 100)}
-        ${metricCard("Sleep", sleepHours || "—", "hrs", "General guideline 7-9h", sleepStatus, ((sleepHours || 0) / 9) * 100)}
+      <div class="ring-row mb">
+        ${ringHTML((totals.calories / T.calorieMax) * 100, calStatus, "🔥", `${totals.calories || 0}/${T.calorieMax}`, "Calories")}
+        ${ringHTML((totals.protein / T.proteinMaxG) * 100, proStatus, "💪", `${totals.protein || 0}/${T.proteinMinG}g`, "Protein")}
+        ${ringHTML((water / T.waterMinL) * 100, waterStatus, "💧", `${water || 0}/${T.waterMinL}L`, "Water")}
+        ${ringHTML((steps / T.stepsMax) * 100, stepsStatus, "👟", `${steps ? (steps / 1000).toFixed(1) + "K" : 0}/${(T.stepsMin / 1000).toFixed(0)}K`, "Steps")}
+        ${ringHTML(((sleepHours || 0) / 9) * 100, sleepStatus, "😴", `${sleepHours || 0}/9h`, "Sleep")}
       </div>
       <div class="grid grid-cards mb">
         ${metricCard("Active Calories", activeCal ?? "—", "kcal", "From Apple Health", "neutral", ((activeCal || 0) / 400) * 100)}
@@ -198,6 +200,7 @@
 
   // ---------- Nutrition Tracker ----------
   function renderNutrition() {
+    checkAchievements();
     const panel = document.getElementById("tab-nutrition");
     const date = AppState.selectedDate;
     const totals = Store.dayTotals(date);
@@ -349,6 +352,128 @@
     }
     return streak;
   }
+
+  // ---------- Achievements + gamification ----------
+  const ACHIEVEMENTS = [
+    { key: "first_meal", icon: "🍽️", label: "First Bite", desc: "Log your first meal", check: (s) => Object.values(s.meals).some((arr) => arr.length > 0) },
+    { key: "first_run", icon: "🏃", label: "First Run", desc: "Log your first run", check: (s) => s.runs.length >= 1 },
+    { key: "five_runs", icon: "🏃‍♀️", label: "On a Roll", desc: "Log 5 runs", check: (s) => s.runs.length >= 5 },
+    { key: "streak_3", icon: "🔥", label: "3-Day Streak", desc: "3 days of workouts/rest checked off in a row", check: () => computeStreak() >= 3 },
+    { key: "streak_7", icon: "🔥🔥", label: "Week Warrior", desc: "7-day streak", check: () => computeStreak() >= 7 },
+    { key: "streak_30", icon: "🔥🔥🔥", label: "Unstoppable", desc: "30-day streak", check: () => computeStreak() >= 30 },
+    { key: "first_checkin", icon: "⚖️", label: "First Check-In", desc: "Log a weight/body check-in", check: (s) => Object.keys(s.weight).length >= 1 },
+    { key: "hydration_hero", icon: "💧", label: "Hydration Hero", desc: "Hit your water target on 5 different days", check: (s) => Object.values(s.water).filter((v) => v >= PROFILE.targets.waterMinL).length >= 5 },
+    { key: "hair_care", icon: "💇", label: "Hair Care Habit", desc: "4+ hair-health items checked, on 5 different days", check: (s) => Object.values(s.hairChecklist).filter((d) => Object.values(d).filter(Boolean).length >= 4).length >= 5 },
+    { key: "supplement_streak", icon: "💊", label: "Supplement Streak", desc: "Log supplements on 5 different days", check: (s) => Object.values(s.supplements).filter((d) => Object.values(d).some(Boolean)).length >= 5 },
+    { key: "cycle_aware", icon: "🌸", label: "Cycle Aware", desc: "Set up the Cycle Tracker", check: (s) => !!(s.cycleSettings && s.cycleSettings.lastPeriodStart) },
+    { key: "meal_prep_pro", icon: "📦", label: "Meal Prep Pro", desc: "Check off every Sunday prep step in one week", check: (s) => Object.values(s.mealPrepChecked).some((wk) => PLANS.mealPrep.steps.every((st) => wk[st.num])) },
+    {
+      key: "perfect_day",
+      icon: "🎯",
+      label: "Perfect Day",
+      desc: "Hit calories, protein, and water targets all in one day",
+      check: (s) =>
+        Object.keys(s.meals).some((d) => {
+          const t = Store.dayTotals(d);
+          const w = s.water[d] || 0;
+          const T = PROFILE.targets;
+          return t.calories >= T.calorieMin && t.calories <= T.calorieMax && t.protein >= T.proteinMinG && w >= T.waterMinL;
+        }),
+    },
+    { key: "backed_up", icon: "💾", label: "Safety First", desc: "Back up your data at least once", check: (s) => !!s.lastBackupAt },
+  ];
+
+  function checkAchievements() {
+    const s = Store.state;
+    if (!s.seenAchievements) s.seenAchievements = [];
+    const newlyUnlocked = ACHIEVEMENTS.filter((a) => !s.seenAchievements.includes(a.key) && a.check(s));
+    newlyUnlocked.forEach((a, i) => {
+      Store.markAchievementSeen(a.key);
+      setTimeout(() => celebrateAchievement(a), i * 1000);
+    });
+  }
+
+  function celebrateAchievement(a) {
+    confettiBurst();
+    toast(`🎉 Achievement unlocked: ${a.icon} ${a.label}`);
+  }
+
+  function confettiBurst() {
+    const colors = ["#d1567f", "#f08bab", "#1e2740", "#2f9e6e", "#d98c3d"];
+    for (let i = 0; i < 20; i++) {
+      const el = document.createElement("div");
+      el.className = "confetti-piece";
+      el.style.left = Math.random() * 100 + "vw";
+      el.style.background = colors[i % colors.length];
+      el.style.animationDelay = Math.random() * 0.3 + "s";
+      el.style.transform = `rotate(${Math.random() * 360}deg)`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1900);
+    }
+  }
+
+  function achievementsGridHTML() {
+    const s = Store.state;
+    const unlockedCount = ACHIEVEMENTS.filter((a) => a.check(s)).length;
+    return `<div class="section-title"><h2>Achievements</h2><span class="badge good">${unlockedCount}/${ACHIEVEMENTS.length}</span></div>
+      <div class="grid grid-cards mb">
+        ${ACHIEVEMENTS.map((a) => {
+          const unlocked = a.check(s);
+          return `<div class="card badge-card ${unlocked ? "unlocked" : "locked"}">
+            <div class="badge-card__icon">${unlocked ? a.icon : "🔒"}</div>
+            <div class="badge-card__label">${a.label}</div>
+            <div class="badge-card__desc muted">${a.desc}</div>
+          </div>`;
+        }).join("")}
+      </div>`;
+  }
+
+  // Total distinct days with any activity logged — powers the header's level pill.
+  function totalActiveDays() {
+    const s = Store.state;
+    const days = new Set([
+      ...Object.keys(s.meals).filter((d) => s.meals[d].length > 0),
+      ...Object.keys(s.water),
+      ...Object.keys(s.workoutLog),
+      ...Object.keys(s.weight),
+    ]);
+    return days.size;
+  }
+  const LEVEL_TITLES = ["Getting Started", "Building Momentum", "Consistency Builder", "Habit Former", "Steady Streaker", "Dedicated", "Health Enthusiast", "Wellness Pro"];
+  function levelInfo() {
+    const days = totalActiveDays();
+    const level = Math.floor(days / 7) + 1;
+    return { level, title: LEVEL_TITLES[Math.min(level - 1, LEVEL_TITLES.length - 1)], days };
+  }
+  function refreshHeaderLevel() {
+    const el = document.getElementById("header-date");
+    if (!el) return;
+    const dateStr = new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const lv = levelInfo();
+    el.innerHTML = `Welcome back, ${PROFILE.name} — ${dateStr} <span class="level-pill">Lv ${lv.level} · ${lv.title}</span>`;
+  }
+
+  function ringHTML(pct, status, icon, valueText, label) {
+    const r = 34,
+      c = 2 * Math.PI * r;
+    const clamped = pct <= 0 ? 0 : Math.max(4, Math.min(100, pct));
+    const offset = c * (1 - clamped / 100);
+    const colorVar = { good: "var(--good)", warn: "var(--warn)", bad: "var(--bad)", neutral: "var(--border)" }[status] || "var(--primary)";
+    return `<div class="ring-card">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 76 76" class="ring-svg">
+          <circle cx="38" cy="38" r="${r}" class="ring-track" />
+          <circle cx="38" cy="38" r="${r}" class="ring-fill" style="stroke:${colorVar};stroke-dasharray:${c};stroke-dashoffset:${offset};" />
+        </svg>
+        <div class="ring-center">
+          <div class="ring-icon">${icon}</div>
+          <div class="ring-value">${valueText}</div>
+        </div>
+      </div>
+      <div class="ring-label">${label}</div>
+    </div>`;
+  }
+
   function weeklyStats(weekStart) {
     const mandatoryDows = [1, 2, 3, 4, 6];
     let done = 0;
@@ -389,6 +514,7 @@
     </div>`;
   }
   function renderWorkouts() {
+    checkAchievements();
     const panel = document.getElementById("tab-workouts");
     const weekStart = AppState.weekStart;
     const streak = computeStreak();
@@ -456,6 +582,7 @@
     });
   }
   function renderRunning() {
+    checkAchievements();
     const panel = document.getElementById("tab-running");
     const runs = [...Store.state.runs].sort((a, b) => a.date.localeCompare(b.date));
     const R = PROFILE.running;
@@ -607,6 +734,7 @@
   }
 
   function renderGoals() {
+    checkAchievements();
     const panel = document.getElementById("tab-goals");
     const G = PROFILE.goals;
     const weightSeries = seriesFromMap(Store.state.weight);
@@ -619,6 +747,7 @@
     const monthLabel = parseLocalDate(`${AppState.reportMonth}-01`).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
     panel.innerHTML = `
+      ${achievementsGridHTML()}
       <div class="grid grid-cards mb">
         <div class="card"><h3>Weight</h3><div class="value">${latestWeight}<span class="unit">kg</span></div><p class="muted">Start ${G.weight.fromKg}kg → Goal ${G.weight.toMinKg}-${G.weight.toMaxKg}kg</p></div>
         <div class="card"><h3>Body Fat</h3><div class="value">${latestBF}<span class="unit">%</span></div><p class="muted">Start ${G.bodyFatPct.from}% → Goal ${G.bodyFatPct.toMin}-${G.bodyFatPct.toMax}%</p></div>
@@ -704,6 +833,7 @@
   }
 
   function renderWellness() {
+    checkAchievements();
     const panel = document.getElementById("tab-wellness");
     const date = AppState.selectedDate;
     const hair = Store.state.hairChecklist[date] || {};
@@ -812,6 +942,7 @@
 
   // ---------- Plans ----------
   function renderPlans() {
+    checkAchievements();
     const panel = document.getElementById("tab-plans");
     const dowOrder = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
     const dowLabels = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
@@ -927,6 +1058,7 @@
         const tmpl = PLANS.nutrition.week[idx];
         tmpl.meals.forEach((m) => Store.addMeal(Store.todayStr(), { meal: m.meal, food: m.food, calories: m.kcal, protein: m.protein, fiber: m.fiber }));
         toast(`Logged ${tmpl.day} to today's meals`);
+        checkAchievements();
       })
     );
     panel.querySelectorAll("[data-grocery]").forEach((cb) =>
@@ -945,6 +1077,7 @@
 
   // ---------- Settings ----------
   function renderSettings() {
+    checkAchievements();
     const panel = document.getElementById("tab-settings");
     const lastBackup = Store.state.lastBackupAt;
     const daysSinceBackup = lastBackup ? Math.floor((Date.now() - new Date(lastBackup).getTime()) / 86400000) : null;
@@ -1145,7 +1278,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("header-date").textContent = `Welcome back, ${PROFILE.name} — ${new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`;
+    refreshHeaderLevel();
     document.querySelectorAll(".tab-btn, #bottom-nav .bn-btn[data-tab]").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.tab)));
 
     document.getElementById("fab").addEventListener("click", () => {

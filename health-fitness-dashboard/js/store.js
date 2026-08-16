@@ -26,6 +26,7 @@
       mealPrepChecked: {}, // weekStartDate -> {protein, rice, veg, eggs, oats, containers: bool}
       cycleSettings: { lastPeriodStart: null, cycleLengthDays: 28 },
       lastBackupAt: null, // ISO timestamp, set when Export Backup is used
+      seenAchievements: [], // achievement keys already unlocked + celebrated, so badges only pop once
     };
   }
 
@@ -267,6 +268,12 @@
     markBackedUp() {
       this.state.lastBackupAt = new Date().toISOString();
       this.persist();
+    },
+    markAchievementSeen(key) {
+      if (!this.state.seenAchievements.includes(key)) {
+        this.state.seenAchievements.push(key);
+        this.persist();
+      }
     },
     importBackup(jsonStr) {
       const parsed = JSON.parse(jsonStr);

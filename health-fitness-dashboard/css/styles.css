@@ -422,3 +422,78 @@ label { font-size: 12.5px; color: var(--text-muted); display: block; margin-bott
 .chip:hover { border-color: var(--primary); }
 .chip .chip__name { font-size: 12.5px; font-weight: 700; color: var(--text); }
 .chip .chip__meta { font-size: 11px; color: var(--text-muted); }
+
+/* Level pill in header */
+.level-pill {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--accent-navy));
+  color: #fff;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Progress rings (Overview) */
+.ring-row {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.ring-row::-webkit-scrollbar { display: none; }
+.ring-card {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 74px;
+}
+.ring-wrap { position: relative; width: 76px; height: 76px; }
+.ring-svg { width: 76px; height: 76px; transform: rotate(-90deg); display: block; }
+.ring-track { fill: none; stroke: var(--surface-2); stroke-width: 8; }
+.ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+.ring-icon { font-size: 15px; line-height: 1; }
+.ring-value { font-size: 10.5px; font-weight: 700; color: var(--text); white-space: nowrap; }
+.ring-label { margin-top: 5px; font-size: 11.5px; font-weight: 600; color: var(--text-muted); }
+
+/* Achievement badges */
+.badge-card {
+  text-align: center;
+  padding: 14px 10px;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+.badge-card.locked { opacity: 0.5; filter: grayscale(0.6); }
+.badge-card.unlocked { border-color: var(--primary); box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent), var(--shadow); }
+.badge-card__icon { font-size: 26px; line-height: 1; margin-bottom: 6px; }
+.badge-card__label { font-size: 12.5px; font-weight: 700; margin-bottom: 2px; }
+.badge-card__desc { font-size: 11px; line-height: 1.3; }
+
+/* Confetti burst */
+.confetti-piece {
+  position: fixed;
+  top: -10px;
+  width: 8px;
+  height: 8px;
+  z-index: 200;
+  border-radius: 2px;
+  animation: confetti-fall 1.7s ease-in forwards;
+  pointer-events: none;
+}
+@keyframes confetti-fall {
+  to { transform: translateY(100vh) rotate(360deg); opacity: 0.15; }
+}
