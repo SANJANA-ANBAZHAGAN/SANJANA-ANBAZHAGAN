@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Budget Tracker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header__title">
+      <span class="app-header__logo">💰</span>
+      <div>
+        <h1>Budget Tracker</h1>
+        <p id="header-date" class="app-header__subtitle"></p>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="upload">Upload</button>
+      <button class="tab-btn" data-tab="review">Review<span id="review-badge-tab"></span></button>
+      <button class="tab-btn" data-tab="cards">Cards &amp; Rules</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <main id="app">
+    <section id="tab-dashboard" class="tab-panel active"></section>
+    <section id="tab-upload" class="tab-panel"></section>
+    <section id="tab-review" class="tab-panel"></section>
+    <section id="tab-cards" class="tab-panel"></section>
+    <section id="tab-settings" class="tab-panel"></section>
+  </main>
+
+  <nav class="bottom-nav" id="bottom-nav">
+    <div class="bottom-nav__inner">
+      <button class="bn-btn active" data-tab="dashboard"><span class="bn-icon">📊</span>Dashboard</button>
+      <button class="bn-btn" data-tab="upload"><span class="bn-icon">📤</span>Upload</button>
+      <button class="bn-btn" data-tab="review"><span class="bn-icon">✅</span>Review<span id="review-badge-bn" class="bn-dot" style="display:none"></span></button>
+      <button class="bn-btn" data-tab="cards"><span class="bn-icon">🗂️</span>Cards</button>
+      <button class="bn-btn" data-tab="settings"><span class="bn-icon">⚙️</span>Settings</button>
+    </div>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/vendor/chart.umd.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/claudeParse.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

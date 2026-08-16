@@ -11,6 +11,7 @@
 
 ## Projects
 - 🏋️‍♀️ [Health & Fitness Dashboard](./health-fitness-dashboard) — a personal dashboard for tracking nutrition, workouts, and running progress, with Apple Health import.
+- 💰 [Budget Tracker](./budget-tracker) — a personal spending tracker with AI-parsed statement uploads, merchant rules, split expenses, and monthly budgets by category.
 
 ## Certifications
 - CompTIA Security+
