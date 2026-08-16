@@ -819,6 +819,7 @@
     const groceryState = Store.state.groceryChecked[groceryWeekKey] || {};
 
     panel.innerHTML = `
+      ${PLANS.weeklyFocus ? `<div class="card mb" style="border-left:3px solid var(--primary);"><strong>This week's focus</strong><p class="muted" style="margin-top:4px;">${PLANS.weeklyFocus}</p></div>` : ""}
       <div class="section-title"><h2>Weekly Workout Plan</h2></div>
       ${dowOrder
         .map((k) => {
@@ -856,6 +857,17 @@
           </div>`;
         })
         .join("")}
+
+      ${
+        PLANS.nutrition.desserts && PLANS.nutrition.desserts.length
+          ? `<div class="section-title"><h2>Healthy Treats</h2></div>
+      <div class="card mb">
+        <p class="muted">2-3x/week is plenty — pick one, log it like any other snack, and it comes out of your day's remaining calories same as anything else.</p>
+        <table><thead><tr><th>Treat</th><th>What it is</th><th>Kcal</th><th>Pro</th><th>Fib</th></tr></thead>
+        <tbody>${PLANS.nutrition.desserts.map((d) => `<tr><td>${d.name}</td><td>${d.food}</td><td>${d.kcal}</td><td>${d.protein}g</td><td>${d.fiber}g</td></tr>`).join("")}</tbody></table>
+      </div>`
+          : ""
+      }
 
       <div class="section-title"><h2>Grocery List</h2></div>
       <div class="card">

@@ -99,6 +99,10 @@ window.PLANS = {
     ],
   },
 
+  // One-line coach note for the week — the Friday Routine (or a manual chat) updates this
+  // after the check-in, so it reflects how the week actually went rather than staying generic.
+  weeklyFocus: "Standing focus this week: hit your protein target most days, keep the Wednesday/Saturday runs on the 10K plan even if they're shorter than planned, and don't stress if the scale doesn't move — consistency is the goal, not perfection.",
+
   nutrition: {
     guidelines: [
       "Daily targets: 1,550-1,650 kcal · 105-110g protein · 28-35g fiber · 2.5L+ water.",
@@ -154,6 +158,12 @@ window.PLANS = {
           { meal: "Dinner", short: "Baked tilapia + roasted veg + quinoa", food: "Baked tilapia, mild preparation (veg swap: extra chickpeas) + roasted zucchini & bell peppers + 1/2 cup quinoa", kcal: 450, protein: 28, fiber: 7 },
         ],
       },
+    ],
+    // 2-3x/week, optional — comes out of the day's remaining calories like any other snack.
+    desserts: [
+      { name: "Greek yogurt dark chocolate bark", food: "Greek yogurt mixed with a little honey, spread thin, topped with 70%+ dark chocolate chips & chopped walnuts, frozen 1hr", kcal: 140, protein: 10, fiber: 1 },
+      { name: "Baked cinnamon apple + yogurt", food: "Baked apple with cinnamon, topped with a spoon of Greek yogurt and a few walnuts", kcal: 150, protein: 6, fiber: 4 },
+      { name: "Protein mug cake", food: "1-min microwave mug cake: protein powder, unsweetened cocoa powder, mashed banana, egg white", kcal: 170, protein: 18, fiber: 3 },
     ],
   },
 
@@ -232,6 +242,10 @@ window.PLANS = {
           "Sambar powder / rasam powder",
           "Chaat masala",
           "Tandoori masala",
+          "Dark chocolate chips or bar (70%+)",
+          "Honey",
+          "Ground cinnamon",
+          "Unsweetened cocoa powder",
         ],
       },
     ],
