@@ -1,7 +1,7 @@
 (function () {
   const PROFILE = window.PROFILE;
   const PLANS = window.PLANS;
-  const ALL_PLAN_MEALS = PLANS.nutrition.days.flatMap((d) => d.meals);
+  const ALL_PLAN_MEALS = PLANS.nutrition.week.flatMap((d) => d.meals);
   const charts = {};
   let AppState = { selectedDate: Store.todayStr(), weekStart: null, reportMonth: Store.todayStr().slice(0, 7), tab: "overview" };
   AppState.weekStart = startOfWeekStr(AppState.selectedDate);
@@ -736,6 +736,7 @@
           <div class="field"><label>Last period start</label><input type="date" id="cycle-start" value="${(cfg && cfg.lastPeriodStart) || ""}" /></div>
           <div class="field"><label>Avg cycle length (days)</label><input type="number" id="cycle-length" value="${(cfg && cfg.cycleLengthDays) || 28}" /></div>
         </div>
+        <p class="muted" style="margin-top:-4px;">Days from the first day of one period to the first day of the next — 28 is a fine default if you're not sure. Doesn't need to be exact.</p>
         <button class="btn small" id="cycle-save">${cycle ? "Update" : "Save"}</button>
       </div>
       <div class="card mb">
@@ -749,11 +750,12 @@
             .map(
               (i) => `<label class="check-row">
             <input type="checkbox" data-hair="${i.key}" ${hair[i.key] ? "checked" : ""} />
-            <span>${i.label}</span>
+            <span>${i.label}${i.why ? `<br><span class="muted" style="font-size:11.5px;">${i.why}</span>` : ""}</span>
           </label>`
             )
             .join("")}
         </div>
+        ${PLANS.hairHealth.bloodTestNote ? `<div class="banner warn mt"><span class="banner__icon">🩸</span><span>${PLANS.hairHealth.bloodTestNote}</span></div>` : ""}
       </div>
       <div class="card mb">
         <h2>Supplements</h2>
@@ -842,16 +844,22 @@
         <tbody>${PLANS.runningPlan.weeks.map((w) => `<tr style="${w.week === weekNum ? "background:var(--surface-2);" : ""}"><td>${w.week === weekNum ? "👉 " : ""}${w.week}</td><td>${w.wed}</td><td>${w.sat}</td><td class="muted">${w.focus}</td></tr>`).join("")}</tbody></table>
       </div>
 
-      <div class="section-title"><h2>Nutrition Plan</h2></div>
+      <div class="section-title"><h2>This Week's Meal Plan</h2></div>
       <div class="card mb"><ul>${PLANS.nutrition.guidelines.map((g) => `<li>${g}</li>`).join("")}</ul></div>
-      ${PLANS.nutrition.days
+      ${PLANS.nutrition.week
         .map((d, i) => {
           const t = d.meals.reduce((a, m) => ({ kcal: a.kcal + m.kcal, protein: a.protein + m.protein, fiber: a.fiber + m.fiber }), { kcal: 0, protein: 0, fiber: 0 });
           return `<div class="accordion" data-acc>
-            <div class="accordion__head">${d.day} — ~${t.kcal} kcal, ${t.protein}g protein, ${t.fiber}g fiber</div>
+            <div class="accordion__head">${d.emoji || ""} ${d.day} — ${d.title} <span class="muted" style="font-weight:400;">(~${t.kcal} kcal, ${t.protein}g protein, ${t.fiber}g fiber)</span></div>
             <div class="accordion__body">
-              <table><thead><tr><th>Meal</th><th>Food</th><th>Kcal</th><th>Pro</th><th>Fib</th></tr></thead>
-              <tbody>${d.meals.map((m) => `<tr><td>${m.meal}</td><td>${m.food}</td><td>${m.kcal}</td><td>${m.protein}g</td><td>${m.fiber}g</td></tr>`).join("")}</tbody></table>
+              <table><thead><tr><th>Meal</th><th>Time</th><th>What to eat</th><th>Kcal</th><th>Pro</th><th>Fib</th></tr></thead>
+              <tbody>${d.meals
+                .map(
+                  (m) =>
+                    `<tr><td>${m.meal}</td><td class="muted">${m.time || ""}</td><td>${m.food}${m.nutrients ? `<br><span class="muted" style="font-size:11.5px;">${m.nutrients}</span>` : ""}</td><td>${m.kcal}</td><td>${m.protein}g</td><td>${m.fiber}g</td></tr>`
+                )
+                .join("")}</tbody></table>
+              ${d.tip ? `<p class="muted mt">💡 ${d.tip}</p>` : ""}
               <button class="btn small mt" data-log-template="${i}">Log this as today's meals</button>
             </div>
           </div>`;
@@ -888,26 +896,35 @@
           .join("")}
       </div>
 
-      <div class="section-title"><h2>Sunday Meal Prep</h2></div>
-      <div class="card">
+      <div class="section-title"><h2>Sunday Meal Prep — ${PLANS.mealPrep.steps.length} steps, ~90 min</h2></div>
+      <div class="card mb">
         <p class="muted">${PLANS.mealPrep.note}</p>
+        <p class="muted" style="margin-top:6px;"><strong>Multitask:</strong> ${PLANS.mealPrep.multitask}</p>
         <div class="checklist">
-          ${PLANS.mealPrep.items
+          ${PLANS.mealPrep.steps
             .map(
-              (i) => `<label class="check-row">
-            <input type="checkbox" data-prep="${i.key}" ${mealPrepState[i.key] ? "checked" : ""} />
-            <span>${i.label}</span>
+              (s) => `<label class="check-row" style="align-items:flex-start;">
+            <input type="checkbox" data-prep="${s.num}" ${mealPrepState[s.num] ? "checked" : ""} style="margin-top:3px;" />
+            <span><strong>${s.num}. ${s.task}</strong> <span class="muted">(${s.timing})</span><br><span class="muted" style="font-size:12.5px;">${s.how}</span></span>
           </label>`
             )
             .join("")}
         </div>
       </div>
+      ${
+        PLANS.mealPrep.newIngredients && PLANS.mealPrep.newIngredients.length
+          ? `<div class="card">
+        <h3>New ingredients to know this week</h3>
+        <ul>${PLANS.mealPrep.newIngredients.map((n) => `<li><strong>${n.name}:</strong> ${n.desc}</li>`).join("")}</ul>
+      </div>`
+          : ""
+      }
     `;
     panel.querySelectorAll("[data-acc] .accordion__head").forEach((h) => h.addEventListener("click", () => h.parentElement.classList.toggle("open")));
     panel.querySelectorAll("[data-log-template]").forEach((btn) =>
       btn.addEventListener("click", () => {
         const idx = Number(btn.dataset.logTemplate);
-        const tmpl = PLANS.nutrition.days[idx];
+        const tmpl = PLANS.nutrition.week[idx];
         tmpl.meals.forEach((m) => Store.addMeal(Store.todayStr(), { meal: m.meal, food: m.food, calories: m.kcal, protein: m.protein, fiber: m.fiber }));
         toast(`Logged ${tmpl.day} to today's meals`);
       })
