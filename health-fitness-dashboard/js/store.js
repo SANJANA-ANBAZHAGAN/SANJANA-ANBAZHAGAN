@@ -20,7 +20,7 @@
       appleNutrition: {}, // date -> {calories, protein, fiber, waterL} logged via a food app synced to Apple Health (reference only, not auto-merged into manual totals)
       workoutLog: {}, // date -> {done, type, source, note, restOk}
       runs: [], // [{id, date, distanceKm, durationMin, paceMinPerKm, avgHR, maxHR, notes, source}]
-      groceryChecked: {}, // itemName -> bool
+      groceryChecked: {}, // weekStartDate -> {itemName: bool} - resets each week since the list itself is regenerated weekly
       hairChecklist: {}, // date -> {eggs, spinachLemon, pumpkinSeeds, walnutsChia, ironVitC, water: bool}
       supplements: {}, // date -> {multivitamin, iron, omega3, magnesium: bool}
       mealPrepChecked: {}, // weekStartDate -> {protein, rice, veg, eggs, oats, containers: bool}
@@ -183,8 +183,9 @@
       delete this.state.workoutLog[date];
       this.persist();
     },
-    toggleGrocery(item) {
-      this.state.groceryChecked[item] = !this.state.groceryChecked[item];
+    toggleGrocery(weekStart, item) {
+      if (!this.state.groceryChecked[weekStart]) this.state.groceryChecked[weekStart] = {};
+      this.state.groceryChecked[weekStart][item] = !this.state.groceryChecked[weekStart][item];
       this.persist();
     },
 

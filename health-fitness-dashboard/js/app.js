@@ -133,8 +133,21 @@
     const stepsStatus = steps === 0 ? "neutral" : steps < T.stepsMin ? "warn" : "good";
     const sleepStatus = !sleepHours ? "neutral" : sleepHours < 7 || sleepHours > 9.5 ? "warn" : "good";
 
+    const focusSched = scheduleForDate(date);
+    const focusCycle = getCyclePhase(date);
+    const focusIronToday = isIronDay(date);
+    const focusLabel = date === Store.todayStr() ? "Today" : fmtDateNice(date);
+
     panel.innerHTML = `
       ${dateNavHTML(date)}
+      <div class="card mb">
+        <h3>${focusLabel}'s Focus</h3>
+        <div class="checklist" style="margin-top:4px;">
+          <div class="check-row" style="cursor:default;"><span class="sheet__icon">${focusSched.type === "rest" ? "😴" : "💪"}</span><span>${focusSched.label}</span></div>
+          ${focusCycle ? `<div class="check-row" style="cursor:default;"><span class="sheet__icon">🌙</span><span>${focusCycle.label} · day ${focusCycle.dayInCycle} — ${focusCycle.nutrition}</span></div>` : ""}
+          <div class="check-row" style="cursor:default;"><span class="sheet__icon">💊</span><span>${focusIronToday ? "Iron day — take Vitron-C Iron with your multivitamin" : "Not an iron day — multivitamin, omega-3 & magnesium only"}</span></div>
+        </div>
+      </div>
       ${bannersHTML(totals)}
       <div class="grid grid-cards mb">
         ${metricCard("Calories", totals.calories || "—", "kcal", `Target ${T.calorieMin}-${T.calorieMax}`, calStatus, (totals.calories / T.calorieMax) * 100)}
@@ -195,9 +208,11 @@
     const calStatus = totals.calories === 0 ? "neutral" : totals.calories > T.calorieMax ? "bad" : totals.calories < T.calorieMin ? "warn" : "good";
     const proStatus = totals.protein === 0 ? "neutral" : totals.protein < T.proteinFlagG ? "bad" : totals.protein < T.proteinMinG ? "warn" : "good";
     const fiberStatus = totals.fiber === 0 ? "neutral" : totals.fiber < T.fiberMinG ? "warn" : "good";
+    const cycleForNutrition = getCyclePhase(date);
 
     panel.innerHTML = `
       ${dateNavHTML(date)}
+      ${cycleForNutrition ? `<div class="banner good"><span class="banner__icon">🌙</span><span>${cycleForNutrition.label} phase (day ${cycleForNutrition.dayInCycle}): ${cycleForNutrition.nutrition}</span></div>` : ""}
       ${bannersHTML(totals)}
       <div class="grid grid-cards mb">
         ${metricCard("Calories", totals.calories, "kcal", `Target ${T.calorieMin}-${T.calorieMax}`, calStatus, (totals.calories / T.calorieMax) * 100)}
@@ -800,6 +815,8 @@
     const dowLabels = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
     const weekNum = currentPlanWeek();
     const mealPrepState = Store.state.mealPrepChecked[startOfWeekStr(Store.todayStr())] || {};
+    const groceryWeekKey = startOfWeekStr(Store.todayStr());
+    const groceryState = Store.state.groceryChecked[groceryWeekKey] || {};
 
     panel.innerHTML = `
       <div class="section-title"><h2>Weekly Workout Plan</h2></div>
@@ -851,7 +868,7 @@
             <ul>${cat.items
               .map(
                 (item) =>
-                  `<li><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-grocery="${escapeHtml(item)}" ${Store.state.groceryChecked[item] ? "checked" : ""} style="width:auto;" /> <span style="${Store.state.groceryChecked[item] ? "text-decoration:line-through;color:var(--text-muted);" : ""}">${item}</span></label></li>`
+                  `<li><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-grocery="${escapeHtml(item)}" ${groceryState[item] ? "checked" : ""} style="width:auto;" /> <span style="${groceryState[item] ? "text-decoration:line-through;color:var(--text-muted);" : ""}">${item}</span></label></li>`
               )
               .join("")}</ul>
           </div>`
@@ -885,7 +902,7 @@
     );
     panel.querySelectorAll("[data-grocery]").forEach((cb) =>
       cb.addEventListener("change", () => {
-        Store.toggleGrocery(cb.dataset.grocery);
+        Store.toggleGrocery(groceryWeekKey, cb.dataset.grocery);
         renderPlans();
       })
     );
