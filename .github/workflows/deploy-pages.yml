@@ -1,12 +1,6 @@
 name: Deploy Health & Fitness Dashboard to GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
-      - claude/health-fitness-dashboard-xbqs32
-    paths:
-      - "health-fitness-dashboard/**"
   workflow_dispatch:
 
 permissions:
