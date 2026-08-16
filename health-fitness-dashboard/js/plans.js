@@ -263,4 +263,31 @@ window.PLANS = {
       { key: "containers", label: "Containers labelled and packed" },
     ],
   },
+
+  // General phase guide, not a diagnosis - actual timing varies person to person.
+  cyclePhases: {
+    note: "A rough guide based on a typical cycle — everyone's is a little different, so treat this as a starting point to notice patterns against, not a rule to force yourself into.",
+    phases: {
+      menstrual: {
+        label: "Menstrual",
+        nutrition: "Iron losses are highest right now — lean into iron-rich meals + vitamin C together (same combo as your hair-health checklist). Extra hunger or lower energy is normal, not a setback.",
+        workout: "Lower intensity is completely fine — walk, stretch, easy movement. If you feel strong, don't force rest either; follow your actual energy.",
+      },
+      follicular: {
+        label: "Follicular",
+        nutrition: "Energy and insulin sensitivity tend to run higher here — a good window to fuel properly around your harder training.",
+        workout: "Often the best window to push — heavier lifts, faster paces. Good stretch to schedule your harder sessions if you have flexibility.",
+      },
+      ovulatory: {
+        label: "Ovulatory",
+        nutrition: "Similar to follicular — appetite and energy are usually steady.",
+        workout: "Peak strength/power window for a lot of people — a good day for a harder effort if one's on the calendar.",
+      },
+      luteal: {
+        label: "Luteal",
+        nutrition: "Metabolic rate can run 100-300 kcal higher here — this is the extra-hunger week. Give yourself the extra 150-200 kcal instead of fighting it.",
+        workout: "Dial back if you need to — more core/mobility, an easier run instead of a hard one. Permission to swap a heavy day for a walk.",
+      },
+    },
+  },
 };

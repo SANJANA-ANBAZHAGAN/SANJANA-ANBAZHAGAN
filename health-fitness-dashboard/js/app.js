@@ -28,6 +28,9 @@
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
+  function hasSpeechRecognition() {
+    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  }
   function sourceLabel(source) {
     return { apple_health: "Apple Health", strava: "Strava", manual: "Manual" }[source] || "Manual";
   }
@@ -214,12 +217,18 @@
         <div class="chip-row">${quickMealChips()}</div>
       </div>
       <div class="card mb">
-        <h2>Or add anything else</h2>
+        <h2>Log anything else</h2>
+        <p class="muted" style="margin-top:-4px;">Made something that's not in your plan? Type it, or ${hasSpeechRecognition() ? "tap the mic to dictate" : "use your keyboard's dictation button"} — enter the numbers as best you can estimate, close enough is fine.</p>
         <div class="form-row">
           <div class="field"><label>Meal</label>
             <select id="m-name"><option>Breakfast</option><option>Mid-morning snack</option><option>Lunch</option><option>Afternoon snack</option><option>Dinner</option><option>Other</option></select>
           </div>
-          <div class="field"><label>Food / notes</label><input type="text" id="m-food" placeholder="e.g. Chicken + quinoa bowl" /></div>
+          <div class="field"><label>Food / notes</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="m-food" placeholder="e.g. Chicken + quinoa bowl" style="flex:1;" />
+              ${hasSpeechRecognition() ? '<button type="button" class="btn secondary" id="m-food-mic" title="Dictate">🎤</button>' : ""}
+            </div>
+          </div>
         </div>
         <div class="form-row">
           <div class="field"><label>Calories</label><input type="number" id="m-cal" /></div>
@@ -239,6 +248,27 @@
       </div>
     `;
     bindDateNav(panel, renderNutrition);
+    const micBtn = panel.querySelector("#m-food-mic");
+    if (micBtn) {
+      micBtn.addEventListener("click", () => {
+        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recog = new Recognition();
+        recog.lang = "en-US";
+        recog.interimResults = false;
+        micBtn.textContent = "●";
+        recog.onresult = (e) => {
+          panel.querySelector("#m-food").value = e.results[0][0].transcript;
+        };
+        recog.onend = () => {
+          micBtn.textContent = "🎤";
+        };
+        recog.onerror = () => {
+          micBtn.textContent = "🎤";
+          toast("Couldn't catch that — try again or type it");
+        };
+        recog.start();
+      });
+    }
     panel.querySelectorAll("[data-chip-idx]").forEach((btn) =>
       btn.addEventListener("click", () => {
         const m = ALL_PLAN_MEALS[Number(btn.dataset.chipIdx)];
@@ -349,12 +379,14 @@
     const streak = computeStreak();
     const stats = weeklyStats(weekStart);
     const days = [...Array(7)].map((_, i) => addDaysStr(weekStart, i));
+    const todayCycle = getCyclePhase(Store.todayStr());
 
     panel.innerHTML = `
       <div class="streak-banner">
         <div><div class="big">🔥 ${streak} day streak</div><div>Keep those non-rest days checked off</div></div>
         <div><div class="big">${stats.done}/${stats.total}</div><div>this week's mandatory sessions</div></div>
       </div>
+      ${todayCycle ? `<div class="banner good"><span class="banner__icon">🌙</span><span>Today: Day ${todayCycle.dayInCycle} · ${todayCycle.label} — ${todayCycle.workout}</span></div>` : ""}
       <div class="flex-between mb">
         <button class="btn secondary small" data-wk="-1">← Prev week</button>
         <strong>${fmtDateNice(weekStart)} – ${fmtDateNice(addDaysStr(weekStart, 6))}</strong>
@@ -636,6 +668,26 @@
   function isIronDay(dateStr) {
     return ordinalDay(dateStr) % 2 === 0;
   }
+
+  // Rough 4-phase model from a start date + average cycle length. Not a diagnosis, just a pattern to notice.
+  function getCyclePhase(dateStr) {
+    const cfg = Store.state.cycleSettings;
+    if (!cfg || !cfg.lastPeriodStart) return null;
+    const cycleLen = cfg.cycleLengthDays || 28;
+    const start = parseLocalDate(cfg.lastPeriodStart);
+    const target = parseLocalDate(dateStr);
+    const diffDays = Math.floor((target - start) / 86400000);
+    const dayInCycle = (((diffDays % cycleLen) + cycleLen) % cycleLen) + 1;
+    const ovulationDay = Math.max(cycleLen - 14, 10);
+    const menstrualEnd = Math.min(5, ovulationDay - 1);
+    let phaseKey;
+    if (dayInCycle <= menstrualEnd) phaseKey = "menstrual";
+    else if (dayInCycle < ovulationDay) phaseKey = "follicular";
+    else if (dayInCycle <= ovulationDay + 1) phaseKey = "ovulatory";
+    else phaseKey = "luteal";
+    return { dayInCycle, cycleLen, phaseKey, ...PLANS.cyclePhases.phases[phaseKey] };
+  }
+
   function renderWellness() {
     const panel = document.getElementById("tab-wellness");
     const date = AppState.selectedDate;
@@ -648,8 +700,29 @@
     const sleepVals = sleepDates.map((d) => (Store.state.sleep[d] ? Store.state.sleep[d].hours : null)).filter((v) => v != null);
     const sleepAvg = sleepVals.length ? sleepVals.reduce((a, b) => a + b, 0) / sleepVals.length : null;
 
+    const cycle = getCyclePhase(date);
+    const cfg = Store.state.cycleSettings;
+
     panel.innerHTML = `
       ${dateNavHTML(date)}
+      <div class="card mb">
+        <h2>Cycle Tracking</h2>
+        <p class="muted" style="margin-top:-2px;">${PLANS.cyclePhases.note}</p>
+        ${
+          cycle
+            ? `<div class="flex-between mb">
+                <div><strong>Day ${cycle.dayInCycle}</strong> of ~${cycle.cycleLen} · <span class="badge neutral">${cycle.label}</span></div>
+              </div>
+              <p><strong>Nutrition:</strong> ${cycle.nutrition}</p>
+              <p><strong>Workout:</strong> ${cycle.workout}</p>`
+            : `<p class="muted">Add your last period start date to see phase-based nutrition and workout tips here and on the Workouts tab.</p>`
+        }
+        <div class="form-row mt">
+          <div class="field"><label>Last period start</label><input type="date" id="cycle-start" value="${(cfg && cfg.lastPeriodStart) || ""}" /></div>
+          <div class="field"><label>Avg cycle length (days)</label><input type="number" id="cycle-length" value="${(cfg && cfg.cycleLengthDays) || 28}" /></div>
+        </div>
+        <button class="btn small" id="cycle-save">${cycle ? "Update" : "Save"}</button>
+      </div>
       <div class="card mb">
         <div class="flex-between">
           <h2>Hair Health Checklist</h2>
@@ -695,6 +768,17 @@
       </div>
     `;
     bindDateNav(panel, renderWellness);
+    panel.querySelector("#cycle-save").addEventListener("click", () => {
+      const start = panel.querySelector("#cycle-start").value;
+      const len = Number(panel.querySelector("#cycle-length").value) || 28;
+      if (!start) {
+        toast("Add a date first");
+        return;
+      }
+      Store.setCycleSettings(start, len);
+      toast("Cycle info saved");
+      renderWellness();
+    });
     panel.querySelectorAll("[data-hair]").forEach((cb) =>
       cb.addEventListener("change", () => {
         Store.toggleHairItem(date, cb.dataset.hair);

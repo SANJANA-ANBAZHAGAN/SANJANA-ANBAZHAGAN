@@ -24,6 +24,7 @@
       hairChecklist: {}, // date -> {eggs, spinachLemon, pumpkinSeeds, walnutsChia, ironVitC, water: bool}
       supplements: {}, // date -> {multivitamin, iron, omega3, magnesium: bool}
       mealPrepChecked: {}, // weekStartDate -> {protein, rice, veg, eggs, oats, containers: bool}
+      cycleSettings: { lastPeriodStart: null, cycleLengthDays: 28 },
     };
   }
 
@@ -219,6 +220,11 @@
 
     setPlanStartDate(date) {
       this.state.planStartDate = date;
+      this.persist();
+    },
+
+    setCycleSettings(lastPeriodStart, cycleLengthDays) {
+      this.state.cycleSettings = { lastPeriodStart, cycleLengthDays: cycleLengthDays || 28 };
       this.persist();
     },
 
