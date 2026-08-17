@@ -1281,6 +1281,23 @@
     refreshHeaderLevel();
     document.querySelectorAll(".tab-btn, #bottom-nav .bn-btn[data-tab]").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.tab)));
 
+    // Reload from storage whenever this tab becomes the active one again — protects against
+    // a stale background tab (or a separate Home Screen icon instance) silently overwriting
+    // newer data saved elsewhere with its older in-memory copy.
+    const resync = () => {
+      Store.reload();
+      renderAll();
+    };
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") resync();
+    });
+    window.addEventListener("pageshow", (e) => {
+      if (e.persisted) resync();
+    });
+    window.addEventListener("storage", (e) => {
+      if (e.key === "hfd_data_v2") resync();
+    });
+
     document.getElementById("fab").addEventListener("click", () => {
       const sched = scheduleForDate(Store.todayStr());
       document.getElementById("quick-today-label").textContent = sched.type === "rest" ? "today's a rest day" : sched.label;

@@ -105,6 +105,12 @@
     persist() {
       save(this.state);
     },
+    // Re-reads from localStorage. Call this whenever the tab regains focus/visibility —
+    // without it, a stale background tab's in-memory state can silently overwrite newer
+    // data saved elsewhere (another tab, a Home Screen icon instance, etc.) on its next save.
+    reload() {
+      this.state = load();
+    },
 
     addMeal(date, meal) {
       if (!this.state.meals[date]) this.state.meals[date] = [];
