@@ -41,6 +41,18 @@ The one thing to avoid: don't paste the code into a *new* conversation to "use i
 phone" — that creates a second, empty tracker with no connection to the first. Always reopen the
 same conversation.
 
+**There's no dashboard URL to bookmark** — unlike a hosted website, this artifact has no public
+link of its own; it only exists inside that one conversation. The closest equivalent is the
+conversation's own address:
+
+1. On your laptop, open the conversation and copy the URL from your browser's address bar —
+   something like `https://claude.ai/chat/xxxxxxxx-xxxx-...`.
+2. Send that URL to your phone (text it to yourself, save it in Notes, etc.).
+3. On your phone, open it in a mobile browser, then **Share → Add to Home Screen** (iOS) or
+   **⋮ menu → Add to Home screen** (Android) — that gives you a tappable icon straight into this
+   conversation, no digging through chat history. If the Claude app is installed, tapping a
+   `claude.ai/chat/...` link may open directly in the app instead of the browser.
+
 ## Where your data lives
 
 Storage is scoped to the artifact, which in practice means the one Claude conversation you set
