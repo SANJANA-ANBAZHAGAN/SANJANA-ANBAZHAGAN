@@ -11,6 +11,7 @@
 
 ## Projects
 - 🏋️‍♀️ [Health & Fitness Dashboard](./health-fitness-dashboard) — a personal dashboard for tracking nutrition, workouts, and running progress, with Apple Health import.
+- 🧾 [Personal Budget Tracker](./personal-budget-tracker) — statement uploads parsed for free via Claude.ai, merchant rules, split expenses, receipt itemization, savings goals, and monthly budgets by category. No API key, no hosting — paste it into a Claude.ai conversation and it works on both phone and laptop through the same conversation. Data lives in that one conversation only.
 
 ## Certifications
 - CompTIA Security+
