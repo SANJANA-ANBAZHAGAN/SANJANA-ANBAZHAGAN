@@ -4,19 +4,42 @@ A budgeting app that reads credit card and bank statements (PDF or screenshot), 
 transactions, handles split expenses and receipt itemization, tracks savings goals, and shows
 monthly spending against a budget per category — the Copilot subscription, replaced.
 
-Runs inside a Claude.ai artifact — no hosting, no accounts, no code to deploy, and no API key.
-This is the zero-cost sibling of [`../budget-tracker`](../budget-tracker) in this repo: that one
-is a real hosted webpage you can reach from any device but needs your own metered Anthropic API
-key; this one costs nothing beyond your normal Claude.ai usage, but lives only inside the one
-conversation you set it up in. See **Where your data lives** below before you rely on either.
+Runs inside a Claude.ai artifact — no hosting, no accounts to set up, no code to deploy, and no
+API key. It costs nothing beyond your normal Claude.ai usage, but lives only inside the one
+conversation you set it up in. See **Where your data lives** below before you rely on it.
 
 ## Getting it running
 
-1. Open a new conversation on Claude.ai.
-2. Attach `AI_README.md` to the conversation and paste the contents of
-   `budget-tracker-shareable.jsx` in a message. Claude will render it as an artifact.
-3. In the artifact, open Settings and rename the placeholder cards to your actual cards.
-4. Start uploading statements from the Upload tab.
+1. On a laptop/desktop browser, open the two files in this folder on GitHub:
+   `budget-tracker-shareable.jsx` and `AI_README.md`. For each, click **Raw**, select all the
+   text, and copy it.
+2. Save `AI_README.md`'s text to your computer as an actual file named `AI_README.md` (e.g.
+   paste it into a plain text editor and save) — you'll need to attach it as a file in step 4.
+3. Go to [claude.ai](https://claude.ai) and start a **New chat**.
+4. Click the attachment (paperclip) icon and attach the `AI_README.md` file you just saved.
+5. In the same message box, paste the full contents of `budget-tracker-shareable.jsx` as text,
+   then send the message. Claude renders it as an artifact automatically.
+6. In the artifact, open **Settings** and rename the placeholder cards to your actual cards.
+7. Rename the conversation itself (its title, in the sidebar) to something like "Budget Tracker"
+   so it's easy to find again later — you'll be reopening this exact conversation every time.
+8. Start uploading statements from the **Upload** tab.
+
+## Using it on your phone and laptop
+
+Claude.ai conversations are tied to your account, not your device — the same conversation shows
+up in the sidebar whether you're on the website or the phone app, as long as you're logged into
+the same account. That's what makes this usable on both:
+
+- **Laptop**: [claude.ai](https://claude.ai) in a browser → find "Budget Tracker" (or whatever
+  you named it) in your chat history → open it. The artifact reopens with all your data.
+- **Phone**: install the Claude app (App Store / Google Play) → log in with the same account →
+  find the same conversation in your chat history → open it. Same artifact, same data, because
+  it's the same `window.storage` scoped to that one conversation, regardless of which device
+  opened it.
+
+The one thing to avoid: don't paste the code into a *new* conversation to "use it on your
+phone" — that creates a second, empty tracker with no connection to the first. Always reopen the
+same conversation.
 
 ## Where your data lives
 
