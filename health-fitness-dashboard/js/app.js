@@ -475,7 +475,7 @@
   }
 
   function weeklyStats(weekStart) {
-    const mandatoryDows = [1, 3, 5, 6]; // Mon/Wed/Fri gym + Sat run — matches PROFILE.schedule
+    const mandatoryDows = [1, 2, 4, 5, 6]; // Mon/Tue/Thu/Fri gym + Sat run — matches PROFILE.schedule
     let done = 0;
     for (let i = 0; i < 7; i++) {
       const ds = addDaysStr(weekStart, i);
@@ -537,7 +537,7 @@
         <button class="btn secondary small" data-wk="1">Next week →</button>
       </div>
       <div class="week-grid">${days.map(dayCardHTML).join("")}</div>
-      <p class="muted mt">Tap a circle to mark done. Rest days are auto-satisfied by default, but tapping one logs it as a bonus 4th session (e.g. Upper Body B, in the Plans tab) for weeks you want 4 gym days instead of 3 — tap again to clear it back to rest.</p>
+      <p class="muted mt">Tap a circle to mark done. Rest days are auto-satisfied by default, but tapping one logs it as an extra session for a week you added a bonus workout — tap again to clear it back to rest.</p>
     `;
     panel.querySelector('[data-wk="-1"]').addEventListener("click", () => {
       AppState.weekStart = addDaysStr(AppState.weekStart, -7);
@@ -552,9 +552,9 @@
         const ds = btn.dataset.toggleDay;
         const sched = scheduleForDate(ds);
         const log = Store.state.workoutLog[ds];
-        // Rest days stay auto-satisfied by default (no tap needed) but can be turned into a
-        // bonus 4th session (e.g. Upper Body B) for a 4-day week — tap again to clear it back.
-        const label = sched.type === "rest" ? "Bonus session (Upper Body B)" : sched.label;
+        // Rest days stay auto-satisfied by default (no tap needed) but can be turned into an
+        // extra logged session — tap again to clear it back.
+        const label = sched.type === "rest" ? "Extra session" : sched.label;
         if (!log || (!log.done && !log.restOk)) Store.setWorkoutDone(ds, true, label, "manual");
         else if (log.done) {
           if (sched.type === "flex") Store.setWorkoutRest(ds, sched.label);
@@ -715,7 +715,7 @@
     const bfPts = seriesFromMap(Store.state.bodyFat).filter((p) => p.date.startsWith(yyyymm));
     const runsInMonth = Store.state.runs.filter((r) => r.date.startsWith(yyyymm));
     const sleepVals = days.map((d) => (Store.state.sleep[d] ? Store.state.sleep[d].hours : null)).filter((v) => v != null);
-    const mandatoryDows = [1, 3, 5, 6]; // Mon/Wed/Fri gym + Sat run — matches PROFILE.schedule
+    const mandatoryDows = [1, 2, 4, 5, 6]; // Mon/Tue/Thu/Fri gym + Sat run — matches PROFILE.schedule
     let expected = 0,
       done = 0;
     days.forEach((d) => {
@@ -1000,16 +1000,21 @@
         })
         .join("")}
 
-      <div class="accordion" data-acc>
-        <div class="accordion__head">🎁 ${PLANS.workouts.upperB.title}</div>
-        <div class="accordion__body">
-          <p class="muted">${PLANS.workouts.upperB.timing}</p>
-          <p>${PLANS.workouts.upperB.note}</p>
-          <table><thead><tr><th>Exercise</th><th>Target</th><th>Sets</th><th>Reps</th><th>Rest</th><th>Cue</th></tr></thead>
-          <tbody>${PLANS.workouts.upperB.blocks.map((b) => `<tr><td>${b.exercise}</td><td class="muted">${b.target}</td><td>${b.sets}</td><td>${b.reps}</td><td>${b.rest}</td><td class="muted">${b.cue}</td></tr>`).join("")}</tbody></table>
-          <p class="mt"><strong>Note:</strong> ${PLANS.workouts.upperB.cooldown}</p>
-        </div>
-      </div>
+      <div class="section-title"><h2>3-Day Full Body Alternative</h2></div>
+      <p class="muted">${PLANS.workouts.fullBody.note}</p>
+      ${PLANS.workouts.fullBody.sessions
+        .map(
+          (s) => `<div class="accordion" data-acc>
+            <div class="accordion__head">🔁 ${s.title}</div>
+            <div class="accordion__body">
+              <p class="muted">${s.timing}</p>
+              <table><thead><tr><th>Exercise</th><th>Target</th><th>Sets</th><th>Reps</th><th>Rest</th><th>Cue</th></tr></thead>
+              <tbody>${s.blocks.map((b) => `<tr><td>${b.exercise}</td><td class="muted">${b.target}</td><td>${b.sets}</td><td>${b.reps}</td><td>${b.rest}</td><td class="muted">${b.cue}</td></tr>`).join("")}</tbody></table>
+              <p class="mt"><strong>Cool-down:</strong> ${s.cooldown}</p>
+            </div>
+          </div>`
+        )
+        .join("")}
 
       <div class="accordion" data-acc>
         <div class="accordion__head">Full Body Stretch Library <span class="muted" style="font-weight:400;">(${PLANS.workouts.stretchLibrary.timing})</span></div>
@@ -1170,13 +1175,13 @@
       <div class="card mb">
         <h2>Apple Health Import</h2>
         <p class="muted">In the iPhone Health app: tap your profile icon → <strong>Export All Health Data</strong> → share the exported .zip to your computer (AirDrop, Files, email) → unzip it → select the <code>export.xml</code> file below. Parsing happens entirely in your browser; nothing is uploaded anywhere.</p>
-        <input type="file" id="ah-file" accept=".xml" />
+        <label class="btn secondary" style="cursor:pointer;display:inline-block;">Choose export.xml<input type="file" id="ah-file" style="display:none;" /></label>
         <p id="ah-status" class="muted mt"></p>
       </div>
       <div class="card mb">
         <h2>Strava Import</h2>
         <p class="muted">Strava's API doesn't allow browser apps to talk to it directly (no CORS), so a one-time local script bridges the gap: <code>node scripts/strava_sync.js</code> run from the <code>health-fitness-dashboard</code> folder. It talks to Strava server-side and writes <code>strava-export.json</code> — select that file below. Full setup steps (getting your API keys and a refresh token) are in <code>README.md → Connecting Strava</code>.</p>
-        <input type="file" id="strava-file" accept=".json" />
+        <label class="btn secondary" style="cursor:pointer;display:inline-block;">Choose strava-export.json<input type="file" id="strava-file" style="display:none;" /></label>
         <p id="strava-status" class="muted mt"></p>
       </div>
       <div class="card mb">
@@ -1217,7 +1222,7 @@
     panel.querySelector("#ah-file").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      panel.querySelector("#ah-status").textContent = "Parsing… this can take a minute for large exports.";
+      panel.querySelector("#ah-status").textContent = `Selected ${file.name} — parsing… this can take a minute for large exports.`;
       try {
         const result = await AppleHealthImport.parseFile(file);
         Store.mergeAppleHealth(result);
@@ -1227,7 +1232,7 @@
         renderAll();
       } catch (err) {
         console.error(err);
-        panel.querySelector("#ah-status").textContent = "Could not parse that file — make sure you selected export.xml.";
+        panel.querySelector("#ah-status").textContent = `Could not parse ${file.name} — make sure you selected the export.xml file (not the .zip).`;
       }
     });
     panel.querySelector("#strava-file").addEventListener("change", async (e) => {
@@ -1384,7 +1389,7 @@
 
     document.getElementById("fab").addEventListener("click", () => {
       const sched = scheduleForDate(Store.todayStr());
-      document.getElementById("quick-today-label").textContent = sched.type === "rest" ? "rest day — tap to log a bonus session instead" : sched.label;
+      document.getElementById("quick-today-label").textContent = sched.type === "rest" ? "rest day — tap to log an extra session instead" : sched.label;
       openSheet("quick-sheet");
     });
     document.querySelector('.bn-btn[data-sheet="more"]').addEventListener("click", () => openSheet("more-sheet"));
@@ -1406,7 +1411,7 @@
           if (AppState.tab === "overview") renderOverview();
         } else if (action === "workout-done") {
           const sched = scheduleForDate(today);
-          const label = sched.type === "rest" ? "Bonus session (Upper Body B)" : sched.label;
+          const label = sched.type === "rest" ? "Extra session" : sched.label;
           Store.setWorkoutDone(today, true, label, "manual");
           toast("Marked done — nice work");
           closeSheets();

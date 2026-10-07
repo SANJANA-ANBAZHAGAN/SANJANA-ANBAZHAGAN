@@ -37,16 +37,18 @@ window.PROFILE = {
     // From Workout Plan V2 — the qualitative goals driving the current training split.
     focus: ["Fat loss", "Lean muscle", "Toned arms + glutes", "10K race", "Fix belly fat", "PCOS / insulin resistance management"],
   },
-  // Rebuilt from Workout Plan V2 — "Option A, 3 Days Per Week": 3 gym days, 2 active-rest
-  // walk days, 1 run day, 1 full rest day. Matches the day keys in PLANS.workouts.
+  // Rebuilt from Workout Plan V2, expanded to a 4-day split as the default: 4 gym days,
+  // 1 active-rest walk day, 1 run day, 1 full rest day. Matches the day keys in
+  // PLANS.workouts. On weeks that only allow 3 gym days, swap in PLANS.workouts.fullBody's
+  // 3 sessions instead (see Plans tab).
   schedule: {
     // 0 = Sunday ... 6 = Saturday
     0: { label: "Rest — Meal Prep + Light Walk", type: "rest" },
     1: { label: "Lower Body A (Glute Focus)", type: "workout" },
-    2: { label: "Rest — Walk 20-30 min", type: "rest" },
-    3: { label: "Upper Body A + Core + APT", type: "workout" },
-    4: { label: "Rest — Walk 20-30 min", type: "rest" },
-    5: { label: "Lower Body B (Quad Focus)", type: "workout" },
+    2: { label: "Upper Body A + Core + APT", type: "workout" },
+    3: { label: "Rest — Walk 20-30 min", type: "rest" },
+    4: { label: "Lower Body B (Quad Focus)", type: "workout" },
+    5: { label: "Upper Body B", type: "workout" },
     6: { label: "Run + Stretch", type: "workout" },
   },
   running: {
