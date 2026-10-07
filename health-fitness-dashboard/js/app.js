@@ -73,14 +73,28 @@
     </div>`;
   }
 
-  function quickMealChips() {
-    return ALL_PLAN_MEALS.map(
-      (m, i) =>
-        `<button class="chip" data-chip-idx="${i}" title="${escapeHtml(m.food)}">
-          <span class="chip__name">${escapeHtml(m.short || m.meal)}</span>
-          <span class="chip__meta">${m.kcal}kcal · ${m.protein}g protein</span>
+  const PLAN_MEAL_TYPES = [...new Set(ALL_PLAN_MEALS.map((m) => m.meal))];
+
+  function filteredPlanMeals(query, mealType) {
+    const q = (query || "").trim().toLowerCase();
+    return ALL_PLAN_MEALS.map((m, i) => ({ m, i })).filter(
+      ({ m }) => (!mealType || m.meal === mealType) && (!q || `${m.short} ${m.food} ${m.meal}`.toLowerCase().includes(q))
+    );
+  }
+
+  function quickMealResultsHTML(results) {
+    if (!results.length) return '<p class="muted" style="padding:6px 2px;">No matches in your plan — type it into "Log anything else" below instead.</p>';
+    return `<div class="quick-meal-list">${results
+      .map(
+        ({ m, i }) => `<button class="quick-meal-row" data-chip-idx="${i}" title="${escapeHtml(m.food)}">
+          <span class="quick-meal-row__text">
+            <span class="quick-meal-row__name">${escapeHtml(m.short || m.meal)}</span>
+            <span class="quick-meal-row__meta">${escapeHtml(m.meal)} · ${m.kcal}kcal · ${m.protein}g protein</span>
+          </span>
+          <span class="quick-meal-row__add" aria-hidden="true">+</span>
         </button>`
-    ).join("");
+      )
+      .join("")}</div>`;
   }
 
   function bannersHTML(totals) {
@@ -231,8 +245,17 @@
       }
       <div class="card mb">
         <h2>From your plan</h2>
-        <p class="muted" style="margin-top:-4px;">Tap one to log it instantly — no typing.</p>
-        <div class="chip-row">${quickMealChips()}</div>
+        <p class="muted" style="margin-top:-4px;">Search or pick a meal type, then tap one to log it instantly.</p>
+        <div class="form-row">
+          <div class="field" style="flex:2;"><label>Search</label><input type="text" id="qm-search" placeholder="e.g. tofu, chicken, oats…" /></div>
+          <div class="field"><label>Meal type</label>
+            <select id="qm-meal-filter">
+              <option value="">All meals</option>
+              ${PLAN_MEAL_TYPES.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+        <div id="qm-results">${quickMealResultsHTML(filteredPlanMeals("", ""))}</div>
       </div>
       <div class="card mb">
         <h2>Log anything else</h2>
@@ -287,14 +310,26 @@
         recog.start();
       });
     }
-    panel.querySelectorAll("[data-chip-idx]").forEach((btn) =>
-      btn.addEventListener("click", () => {
-        const m = ALL_PLAN_MEALS[Number(btn.dataset.chipIdx)];
-        Store.addMeal(date, { meal: m.meal, food: m.short, calories: m.kcal, protein: m.protein, fiber: m.fiber });
-        toast(`Logged ${m.short}`);
-        renderNutrition();
-      })
-    );
+    const qmSearch = panel.querySelector("#qm-search");
+    const qmMealFilter = panel.querySelector("#qm-meal-filter");
+    const qmResults = panel.querySelector("#qm-results");
+    function bindQuickMealRows() {
+      qmResults.querySelectorAll("[data-chip-idx]").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          const m = ALL_PLAN_MEALS[Number(btn.dataset.chipIdx)];
+          Store.addMeal(date, { meal: m.meal, food: m.short, calories: m.kcal, protein: m.protein, fiber: m.fiber });
+          toast(`Logged ${m.short}`);
+          renderNutrition();
+        })
+      );
+    }
+    function updateQuickMealResults() {
+      qmResults.innerHTML = quickMealResultsHTML(filteredPlanMeals(qmSearch.value, qmMealFilter.value));
+      bindQuickMealRows();
+    }
+    qmSearch.addEventListener("input", updateQuickMealResults);
+    qmMealFilter.addEventListener("change", updateQuickMealResults);
+    bindQuickMealRows();
     if (appleNut) {
       const mfpBtn = panel.querySelector("#log-mfp");
       if (mfpBtn)
