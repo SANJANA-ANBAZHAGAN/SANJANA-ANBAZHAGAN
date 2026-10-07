@@ -100,7 +100,7 @@ window.PLANS = {
     tue: {
       title: "Rest — Walk 20-30 min",
       type: "rest",
-      note: "10 min walk after lunch and after dinner — non-negotiable on rest days. Post-meal walks lower blood glucose by up to 30%. Optional: the resistance band routine below for extra glute activation.",
+      note: "10 min walk after lunch and after dinner — non-negotiable on rest days. Post-meal walks lower blood glucose by up to 30%. Optional: the resistance band routine below, or swap in Upper Body B if this is a 4-day week.",
       blocks: [],
     },
     wed: {
@@ -122,7 +122,7 @@ window.PLANS = {
     thu: {
       title: "Rest — Walk 20-30 min",
       type: "rest",
-      note: "Same as Tuesday — 10 min walk after lunch and after dinner.",
+      note: "Same as Tuesday — 10 min walk after lunch and after dinner. Also an option for Upper Body B on a 4-day week.",
       blocks: [],
     },
     fri: {
@@ -153,6 +153,26 @@ window.PLANS = {
       type: "rest",
       note: "Full rest. Meal prep. 20 min walk after your biggest meal.",
       blocks: [],
+    },
+
+    // Optional 4th gym session — not assigned to a fixed weekday. The PDF's own progression
+    // guide says add this from Month 4+, but it's here from day one for weeks you want to do
+    // 4 days instead of 3 — swap it into any rest day (Tue/Thu/Sun).
+    upperB: {
+      title: "Upper Body B — Chest, Shoulders, Arms, Core (Optional 4th Session)",
+      timing: "45 min · Gym · Swap into Tue, Thu, or Sun on a 4-day week",
+      note: "Builds the pectoral muscles underneath the breast tissue for a natural lift — flat press for overall chest mass, incline press for the upper pec that creates the lift, fly for the full stretch. Face pulls and rear delt work pull shoulders back, which alone improves posture and lift.",
+      blocks: [
+        { exercise: "Dumbbell Chest Press (Bench)", target: "Chest, triceps", sets: "4", reps: "8-10", rest: "90 sec", cue: "Feet flat, arch naturally, dumbbells to chest, drive up and slightly inward — don't flare elbows too wide." },
+        { exercise: "Arnold Press (DB)", target: "All 3 shoulder heads", sets: "3", reps: "10", rest: "75 sec", cue: "Palms face you at the start, rotate to palms away as you press up, reverse on the way down." },
+        { exercise: "Incline Dumbbell Press — LIFT FOCUS", target: "Upper chest (KEY for lift)", sets: "3", reps: "10-12", rest: "75 sec", cue: "Bench at 30-45° only. Press up and slightly inward — this upper pec lifts the chest from underneath. Do NOT skip this one." },
+        { exercise: "Hammer Curl (DB)", target: "Biceps, brachialis, forearms", sets: "3", reps: "12", rest: "60 sec", cue: "Neutral grip, elbows fixed, 3-sec lower builds the peak." },
+        { exercise: "Overhead Tricep Extension (DB)", target: "Triceps (long head)", sets: "3", reps: "12", rest: "60 sec", cue: "One dumbbell, both hands, overhead — elbows point forward and stay close." },
+        { exercise: "Cable Chest Fly / DB Fly", target: "Chest, shoulder", sets: "3", reps: "12-15", rest: "60 sec", cue: "Slight bend in elbows throughout — think hugging a tree. Squeeze chest at close, don't go too heavy." },
+        { exercise: "Plank Hold", target: "Full core, shoulders", sets: "3", reps: "30-40 sec hold", rest: "45 sec", cue: "Forearms down, straight line, hips not raised not sagging. Squeeze glutes and core and quads together." },
+        { exercise: "Pallof Press (anti-rotation cable)", target: "Core, obliques", sets: "3", reps: "10 ea side", rest: "45 sec", cue: "Stand sideways to the cable, press straight out, hold 2 sec. Resist it trying to rotate you — targets waist tightening." },
+      ],
+      cooldown: "Incline angle matters: 30-45° only — any steeper turns it into a shoulder exercise. Flat + incline together = complete chest development. No cable machine for Pallof press? Sub band Pallof press anchored to a door.",
     },
 
     progression: {

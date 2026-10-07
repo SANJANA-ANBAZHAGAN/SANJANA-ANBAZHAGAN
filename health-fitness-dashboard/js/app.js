@@ -494,12 +494,15 @@
     const isToday = ds === Store.todayStr();
     let checkCls = "",
       checkIcon = "";
-    if (sched.type === "rest") {
-      checkCls = "rest";
-      checkIcon = "😴";
-    } else if (log && log.done) {
+    // Check an actual logged workout first — a rest day someone voluntarily turned into a
+    // bonus 4th session (e.g. Upper Body B) should show as done, not fall back to the
+    // default rest icon.
+    if (log && log.done) {
       checkCls = "done";
       checkIcon = "✓";
+    } else if (sched.type === "rest") {
+      checkCls = "rest";
+      checkIcon = "😴";
     } else if (log && log.restOk) {
       checkCls = "rest";
       checkIcon = "😴";
@@ -509,7 +512,7 @@
       <div class="dow">${d.toLocaleDateString(undefined, { weekday: "short" })}</div>
       <div class="date-num">${d.getDate()}</div>
       <div class="label">${sched.label}</div>
-      <button class="check ${checkCls}" data-toggle-day="${ds}" ${sched.type === "rest" ? "disabled" : ""}>${checkIcon}</button>
+      <button class="check ${checkCls}" data-toggle-day="${ds}" title="${sched.type === "rest" ? "Rest day — tap to log a bonus session instead" : ""}">${checkIcon}</button>
       ${sourceTag}
     </div>`;
   }
@@ -534,7 +537,7 @@
         <button class="btn secondary small" data-wk="1">Next week →</button>
       </div>
       <div class="week-grid">${days.map(dayCardHTML).join("")}</div>
-      <p class="muted mt">Tap a circle to mark done. Friday cycles: done → rest → clear. Rest days are auto-satisfied.</p>
+      <p class="muted mt">Tap a circle to mark done. Rest days are auto-satisfied by default, but tapping one logs it as a bonus 4th session (e.g. Upper Body B, in the Plans tab) for weeks you want 4 gym days instead of 3 — tap again to clear it back to rest.</p>
     `;
     panel.querySelector('[data-wk="-1"]').addEventListener("click", () => {
       AppState.weekStart = addDaysStr(AppState.weekStart, -7);
@@ -548,9 +551,11 @@
       btn.addEventListener("click", () => {
         const ds = btn.dataset.toggleDay;
         const sched = scheduleForDate(ds);
-        if (sched.type === "rest") return;
         const log = Store.state.workoutLog[ds];
-        if (!log || (!log.done && !log.restOk)) Store.setWorkoutDone(ds, true, sched.label, "manual");
+        // Rest days stay auto-satisfied by default (no tap needed) but can be turned into a
+        // bonus 4th session (e.g. Upper Body B) for a 4-day week — tap again to clear it back.
+        const label = sched.type === "rest" ? "Bonus session (Upper Body B)" : sched.label;
+        if (!log || (!log.done && !log.restOk)) Store.setWorkoutDone(ds, true, label, "manual");
         else if (log.done) {
           if (sched.type === "flex") Store.setWorkoutRest(ds, sched.label);
           else Store.clearWorkoutLog(ds);
@@ -996,6 +1001,17 @@
         .join("")}
 
       <div class="accordion" data-acc>
+        <div class="accordion__head">🎁 ${PLANS.workouts.upperB.title}</div>
+        <div class="accordion__body">
+          <p class="muted">${PLANS.workouts.upperB.timing}</p>
+          <p>${PLANS.workouts.upperB.note}</p>
+          <table><thead><tr><th>Exercise</th><th>Target</th><th>Sets</th><th>Reps</th><th>Rest</th><th>Cue</th></tr></thead>
+          <tbody>${PLANS.workouts.upperB.blocks.map((b) => `<tr><td>${b.exercise}</td><td class="muted">${b.target}</td><td>${b.sets}</td><td>${b.reps}</td><td>${b.rest}</td><td class="muted">${b.cue}</td></tr>`).join("")}</tbody></table>
+          <p class="mt"><strong>Note:</strong> ${PLANS.workouts.upperB.cooldown}</p>
+        </div>
+      </div>
+
+      <div class="accordion" data-acc>
         <div class="accordion__head">Full Body Stretch Library <span class="muted" style="font-weight:400;">(${PLANS.workouts.stretchLibrary.timing})</span></div>
         <div class="accordion__body">
           <p>${PLANS.workouts.stretchLibrary.note}</p>
@@ -1368,7 +1384,7 @@
 
     document.getElementById("fab").addEventListener("click", () => {
       const sched = scheduleForDate(Store.todayStr());
-      document.getElementById("quick-today-label").textContent = sched.type === "rest" ? "today's a rest day" : sched.label;
+      document.getElementById("quick-today-label").textContent = sched.type === "rest" ? "rest day — tap to log a bonus session instead" : sched.label;
       openSheet("quick-sheet");
     });
     document.querySelector('.bn-btn[data-sheet="more"]').addEventListener("click", () => openSheet("more-sheet"));
@@ -1390,12 +1406,9 @@
           if (AppState.tab === "overview") renderOverview();
         } else if (action === "workout-done") {
           const sched = scheduleForDate(today);
-          if (sched.type === "rest") {
-            toast("Today's a rest day — nothing to mark");
-          } else {
-            Store.setWorkoutDone(today, true, sched.label, "manual");
-            toast("Marked done — nice work");
-          }
+          const label = sched.type === "rest" ? "Bonus session (Upper Body B)" : sched.label;
+          Store.setWorkoutDone(today, true, label, "manual");
+          toast("Marked done — nice work");
           closeSheets();
           if (AppState.tab === "workouts") renderWorkouts();
         } else if (action === "log-meal") {
