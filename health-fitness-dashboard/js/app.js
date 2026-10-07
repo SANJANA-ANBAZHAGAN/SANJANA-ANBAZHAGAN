@@ -475,7 +475,7 @@
   }
 
   function weeklyStats(weekStart) {
-    const mandatoryDows = [1, 2, 3, 4, 6];
+    const mandatoryDows = [1, 3, 5, 6]; // Mon/Wed/Fri gym + Sat run — matches PROFILE.schedule
     let done = 0;
     for (let i = 0; i < 7; i++) {
       const ds = addDaysStr(weekStart, i);
@@ -710,7 +710,7 @@
     const bfPts = seriesFromMap(Store.state.bodyFat).filter((p) => p.date.startsWith(yyyymm));
     const runsInMonth = Store.state.runs.filter((r) => r.date.startsWith(yyyymm));
     const sleepVals = days.map((d) => (Store.state.sleep[d] ? Store.state.sleep[d].hours : null)).filter((v) => v != null);
-    const mandatoryDows = [1, 2, 3, 4, 6];
+    const mandatoryDows = [1, 3, 5, 6]; // Mon/Wed/Fri gym + Sat run — matches PROFILE.schedule
     let expected = 0,
       done = 0;
     days.forEach((d) => {
@@ -953,26 +953,94 @@
 
     panel.innerHTML = `
       ${PLANS.weeklyFocus ? `<div class="card mb" style="border-left:3px solid var(--primary);"><strong>This week's focus</strong><p class="muted" style="margin-top:4px;">${PLANS.weeklyFocus}</p></div>` : ""}
+
+      <div class="section-title"><h2>${PLANS.workouts.aptRoutine.title}</h2></div>
+      <div class="card mb">
+        <p class="muted">${PLANS.workouts.aptRoutine.timing}</p>
+        <p>${PLANS.workouts.aptRoutine.note}</p>
+        <table><thead><tr><th>Exercise</th><th>Target</th><th>Sets</th><th>Reps</th><th>Rest</th><th>Cue</th></tr></thead>
+        <tbody>${PLANS.workouts.aptRoutine.exercises.map((e) => `<tr><td>${e.exercise}</td><td class="muted">${e.target}</td><td>${e.sets}</td><td>${e.reps}</td><td>${e.rest}</td><td class="muted">${e.cue}</td></tr>`).join("")}</tbody></table>
+      </div>
+
+      <div class="accordion" data-acc>
+        <div class="accordion__head">${PLANS.workouts.warmup.title} <span class="muted" style="font-weight:400;">(${PLANS.workouts.warmup.timing})</span></div>
+        <div class="accordion__body">
+          <p>${PLANS.workouts.warmup.note}</p>
+          <table><thead><tr><th>Exercise</th><th>Sets</th><th>Reps</th><th>Cue</th></tr></thead>
+          <tbody>${PLANS.workouts.warmup.exercises.map((e) => `<tr><td>${e.exercise}</td><td>${e.sets}</td><td>${e.reps}</td><td class="muted">${e.cue}</td></tr>`).join("")}</tbody></table>
+          <p class="muted mt"><strong>Core engagement, every rep:</strong></p>
+          <ul>${PLANS.workouts.coreEngagementGuide.map((g) => `<li>${g}</li>`).join("")}</ul>
+        </div>
+      </div>
+
       <div class="section-title"><h2>Weekly Workout Plan</h2></div>
       ${dowOrder
         .map((k) => {
           const w = PLANS.workouts[k];
+          const blocks = w.blocks || [];
           return `<div class="accordion" data-acc>
             <div class="accordion__head">${dowLabels[k]} — ${w.title}</div>
             <div class="accordion__body">
-              ${w.warmup ? `<p><strong>Warm-up:</strong> ${w.warmup}</p>` : ""}
-              ${w.note ? `<p class="muted">${w.note}</p>` : ""}
-              <ul>${w.blocks.map((b) => `<li><strong>${b.exercise}</strong> — ${b.sets}</li>`).join("")}</ul>
-              ${w.cooldown ? `<p><strong>Cool-down:</strong> ${w.cooldown}</p>` : ""}
+              ${w.timing ? `<p class="muted">${w.timing}</p>` : ""}
+              ${w.note ? `<p>${w.note}</p>` : ""}
+              ${
+                blocks.length
+                  ? `<table><thead><tr><th>Exercise</th><th>Target</th><th>Sets</th><th>Reps</th><th>Rest</th><th>Cue</th></tr></thead>
+                <tbody>${blocks.map((b) => `<tr><td>${b.exercise}</td><td class="muted">${b.target}</td><td>${b.sets}</td><td>${b.reps}</td><td>${b.rest}</td><td class="muted">${b.cue}</td></tr>`).join("")}</tbody></table>`
+                  : ""
+              }
+              ${w.cooldown ? `<p class="mt"><strong>Cool-down:</strong> ${w.cooldown}</p>` : ""}
             </div>
           </div>`;
         })
         .join("")}
 
+      <div class="accordion" data-acc>
+        <div class="accordion__head">Full Body Stretch Library <span class="muted" style="font-weight:400;">(${PLANS.workouts.stretchLibrary.timing})</span></div>
+        <div class="accordion__body">
+          <p>${PLANS.workouts.stretchLibrary.note}</p>
+          <p class="mt"><strong>Lower Body + Hip</strong></p>
+          <table><thead><tr><th>Stretch</th><th>Hold</th><th>Cue</th></tr></thead>
+          <tbody>${PLANS.workouts.stretchLibrary.lowerBody.map((s) => `<tr><td>${s.exercise}</td><td>${s.hold}</td><td class="muted">${s.cue}</td></tr>`).join("")}</tbody></table>
+          <p class="mt"><strong>Upper Body + Postural</strong></p>
+          <table><thead><tr><th>Stretch</th><th>Hold</th><th>Cue</th></tr></thead>
+          <tbody>${PLANS.workouts.stretchLibrary.upperBody.map((s) => `<tr><td>${s.exercise}</td><td>${s.hold}</td><td class="muted">${s.cue}</td></tr>`).join("")}</tbody></table>
+        </div>
+      </div>
+
+      <div class="accordion" data-acc>
+        <div class="accordion__head">${PLANS.workouts.bandRoutine.title} <span class="muted" style="font-weight:400;">(${PLANS.workouts.bandRoutine.timing})</span></div>
+        <div class="accordion__body">
+          <p>${PLANS.workouts.bandRoutine.note}</p>
+          <table><thead><tr><th>Exercise</th><th>Target</th><th>Sets</th><th>Reps</th><th>Rest</th><th>Cue</th></tr></thead>
+          <tbody>${PLANS.workouts.bandRoutine.exercises.map((e) => `<tr><td>${e.exercise}</td><td class="muted">${e.target}</td><td>${e.sets}</td><td>${e.reps}</td><td>${e.rest}</td><td class="muted">${e.cue}</td></tr>`).join("")}</tbody></table>
+        </div>
+      </div>
+
+      <div class="accordion" data-acc>
+        <div class="accordion__head">12-Week Progression Guide</div>
+        <div class="accordion__body">
+          <p>${PLANS.workouts.progression.note}</p>
+          <p class="muted"><strong>Weight increase rule:</strong> ${PLANS.workouts.progression.weightRule}</p>
+          <table><thead><tr><th>Phase</th><th>Weeks</th><th>What to do</th><th>You'll know it's working when...</th></tr></thead>
+          <tbody>${PLANS.workouts.progression.phases.map((p) => `<tr><td><strong>${p.phase}</strong></td><td>${p.weeks}</td><td>${p.whatToDo}</td><td class="muted">${p.signs}</td></tr>`).join("")}</tbody></table>
+        </div>
+      </div>
+
+      <div class="accordion" data-acc>
+        <div class="accordion__head">PCOS / Insulin Resistance Rules</div>
+        <div class="accordion__body">
+          <p class="muted">${PLANS.workouts.pcosRules.note}</p>
+          <table><thead><tr><th>Rule</th><th>Why it matters</th></tr></thead>
+          <tbody>${PLANS.workouts.pcosRules.rules.map((r) => `<tr><td><strong>${r.rule}</strong></td><td class="muted">${r.why}</td></tr>`).join("")}</tbody></table>
+        </div>
+      </div>
+
       <div class="section-title"><h2>10K Running Plan</h2></div>
       <div class="card mb" style="overflow-x:auto;">
-        <table><thead><tr><th>Week</th><th>Wed (Run+Core)</th><th>Sat (Long Run)</th><th>Focus</th></tr></thead>
-        <tbody>${PLANS.runningPlan.weeks.map((w) => `<tr style="${w.week === weekNum ? "background:var(--surface-2);" : ""}"><td>${w.week === weekNum ? "👉 " : ""}${w.week}</td><td>${w.wed}</td><td>${w.sat}</td><td class="muted">${w.focus}</td></tr>`).join("")}</tbody></table>
+        <p class="muted">${PLANS.runningPlan.startNote}</p>
+        <table><thead><tr><th>Week</th><th>Saturday Run</th><th>Focus</th></tr></thead>
+        <tbody>${PLANS.runningPlan.weeks.map((w) => `<tr style="${w.week === weekNum ? "background:var(--surface-2);" : ""}"><td>${w.week === weekNum ? "👉 " : ""}${w.week}</td><td>${w.sat}</td><td class="muted">${w.focus}</td></tr>`).join("")}</tbody></table>
       </div>
 
       <div class="section-title"><h2>This Week's Meal Plan</h2></div>

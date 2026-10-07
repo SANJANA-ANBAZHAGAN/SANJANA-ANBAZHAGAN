@@ -34,16 +34,20 @@ window.PROFILE = {
     weight: { fromKg: 56.5, toMinKg: 52, toMaxKg: 54 },
     bodyFatPct: { from: 33.2, toMin: 25, toMax: 27 },
     visceralFat: { from: 8, below: 6 },
+    // From Workout Plan V2 — the qualitative goals driving the current training split.
+    focus: ["Fat loss", "Lean muscle", "Toned arms + glutes", "10K race", "Fix belly fat", "PCOS / insulin resistance management"],
   },
+  // Rebuilt from Workout Plan V2 — "Option A, 3 Days Per Week": 3 gym days, 2 active-rest
+  // walk days, 1 run day, 1 full rest day. Matches the day keys in PLANS.workouts.
   schedule: {
     // 0 = Sunday ... 6 = Saturday
-    0: { label: "Rest + Meal Prep", type: "rest" },
-    1: { label: "Upper Body A", type: "workout" },
-    2: { label: "Lower Body A (glute focus)", type: "workout" },
-    3: { label: "Run + Core", type: "workout" },
-    4: { label: "Upper Body B", type: "workout" },
-    5: { label: "Lower Body B or Rest", type: "flex" },
-    6: { label: "Long Run + Stretch", type: "workout" },
+    0: { label: "Rest — Meal Prep + Light Walk", type: "rest" },
+    1: { label: "Lower Body A (Glute Focus)", type: "workout" },
+    2: { label: "Rest — Walk 20-30 min", type: "rest" },
+    3: { label: "Upper Body A + Core + APT", type: "workout" },
+    4: { label: "Rest — Walk 20-30 min", type: "rest" },
+    5: { label: "Lower Body B (Quad Focus)", type: "workout" },
+    6: { label: "Run + Stretch", type: "workout" },
   },
   running: {
     pr5k: { distanceKm: 5, durationMin: 45, paceMinPerKm: 9 },
@@ -51,8 +55,8 @@ window.PROFILE = {
       distanceKm: 10,
       targetMinMin: 80,
       targetMaxMin: 100,
-      weeksMin: 10,
-      weeksMax: 12,
+      weeksMin: 14,
+      weeksMax: 14,
       targetPaceFastMinPerKm: 8,
       targetPaceEasyMinPerKm: 10,
     },
