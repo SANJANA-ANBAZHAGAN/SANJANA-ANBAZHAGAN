@@ -84,6 +84,7 @@ const DEFAULT_RULES = [
   // --- delivery apps BEFORE the plain ride-hailing rules below, since "UBER EATS" contains "UBER" ---
   { pattern: "DOORDASH", category: "Restaurants & Delivery" },
   { pattern: "UBER EATS", category: "Restaurants & Delivery" },
+  { pattern: "UBER *EATS", category: "Restaurants & Delivery" },
   { pattern: "UBEREATS", category: "Restaurants & Delivery" },
   { pattern: "GRUBHUB", category: "Restaurants & Delivery" },
   { pattern: "POSTMATES", category: "Restaurants & Delivery" },
